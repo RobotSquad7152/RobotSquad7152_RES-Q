@@ -5,14 +5,14 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 /**
  * Created by Tony on 9/20/2015.
  */
-public class Gyrothread extends Thread {
+public class GyroThread extends Thread {
 
 
-    double currentheading;
+    double currentHeading;
     double calibratedGyroRotation;
     GyroSensor gyro;
-    public Gyrothread(GyroSensor g){
-        currentheading = 0;
+    public GyroThread(GyroSensor g){
+        currentHeading = 0;
         gyro = g;
         calibratedGyroRotation = 0;
 
@@ -20,12 +20,12 @@ public class Gyrothread extends Thread {
     }
 
 
-    public double getCurrentheading() {
-        return currentheading;
+    public double getCurrentHeading() {
+        return currentHeading;
     }
 
-    public void setCurrentheading(double currentheading) {
-        this.currentheading = currentheading;
+    public void setCurrentHeading(double currentHeading) {
+        this.currentHeading = currentHeading;
     }
 
 
@@ -75,7 +75,7 @@ public class Gyrothread extends Thread {
             stopwatch.Resetstopwatch();
 
             // calculate turn based on gyro reading divided by the time taken since the last reading (6ms)
-            currentheading = currentheading + (gyro.getRotation()- calibratedGyroRotation) * .008;
+            currentHeading = currentHeading + (gyro.getRotation()- calibratedGyroRotation) * .008;
         }while(true);
 
 
