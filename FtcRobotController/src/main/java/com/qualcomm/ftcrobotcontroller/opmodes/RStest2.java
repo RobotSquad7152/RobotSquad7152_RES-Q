@@ -49,7 +49,7 @@ public class RStest2 extends LinearOpMode {
   DcMotorController motorController1;
   GyroSensor gyro;
 
-  //Gyrothread gyrothread;
+  //GyroThread gyrothread;
 
   @Override
   public void runOpMode() throws InterruptedException {

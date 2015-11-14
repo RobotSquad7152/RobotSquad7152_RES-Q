@@ -51,7 +51,7 @@ public class RStest extends LinearOpMode {
   DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
 
-  //Gyrothread gyrothread;
+  //GyroThread gyrothread;
 
   @Override
   public void runOpMode() throws InterruptedException {
@@ -78,7 +78,7 @@ public class RStest extends LinearOpMode {
     robot.SetBackRightMotor(motorBackRight);
     robot.SetBackLeftMotor(motorBackLeft);
     robot.setMotorControllerFrontDrive(motorControllerFrontDrive);
-    robot.setMotorControllerFrontDrive(motorControllerRearDrive);
+    robot.setMotorControllerRearDrive(motorControllerRearDrive);
 
     robot.setOpMode(this);
 
@@ -89,6 +89,6 @@ public class RStest extends LinearOpMode {
 
 
     //robot.SpinRight(.8, 360);
-    robot.DriveForward(.5, 40);
+    robot.DriveForwardLegacy(.5, 40);
   }
 }

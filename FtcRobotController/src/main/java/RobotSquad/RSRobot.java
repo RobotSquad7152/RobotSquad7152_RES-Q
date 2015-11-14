@@ -42,15 +42,15 @@ public class RSRobot {
         this.myAlliance = myAlliance;
     }
 
-    //defines drive wheel diameter
-    final double wheeldiacm = 4 * 2.54;
+    //defines drive wheel diameter -- a 2 inch sprocket this year
+    final double wheeldiacm = 2 * 2.54;
     //defines drive wheel circumference
     final double wheelcirccm = wheeldiacm * 3.141592653589793;
-    //defines how many teeth on gear attached to motor
-    final double motorgearteeth = 24;
-    //defines how many teeth on gear attached to wheel
-    final double wheelgearteeth = 24;
-    //matrix encoder counts per rotation of the motor
+    //defines how many teeth on gear attached to motor (no gearing this year)
+    final double motorgearteeth = 1;
+    //defines how many teeth on gear attached to wheel (no gearing this year)
+    final double wheelgearteeth = 1;
+    //encoder counts per rotation of the motor
     final double motorclicksperrotation = 1120;
     //calculates how far the robot will drive for each motor encoder click
     final double onemotorclick = ((motorgearteeth / wheelgearteeth) * wheelcirccm) / motorclicksperrotation;
@@ -64,9 +64,9 @@ public class RSRobot {
             gyrothread.start();
         }
         if (motorBackRight != null)
-            motorBackRight.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+            motorBackRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
         if (motorBackLeft != null)
-            motorBackLeft.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+            motorBackLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
     }
 
     public RSRobot(GyroSensor gyro) {
@@ -113,7 +113,7 @@ public class RSRobot {
 
         encoderTarget = distance / onemotorclick;
 
-        motorBackLeft.setChannelMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        motorBackLeft.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
         motorControllerRearDrive.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_ONLY);
         while (motorControllerRearDrive.getMotorControllerDeviceMode() != DcMotorController.DeviceMode.READ_ONLY) {
             opMode.telemetry.addData("WAITING FOR READ_ONLY ", 1234);

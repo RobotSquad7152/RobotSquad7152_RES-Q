@@ -56,7 +56,7 @@ public class RSTeleOp extends OpMode {
 	DcMotor motorBackLeft;
 	double leftPower = 0;
 	double rightPower = 0;
-	double deadZone = .05;
+	double deadZone = .1;
 
 	/**
 	 * Constructor
@@ -134,7 +134,7 @@ public class RSTeleOp extends OpMode {
 			}
 
 		}
-		else if(y1 <= deadZone)
+		else if(y1 <= -deadZone)
 		{
 			if(x2 >= deadZone)
 			{
