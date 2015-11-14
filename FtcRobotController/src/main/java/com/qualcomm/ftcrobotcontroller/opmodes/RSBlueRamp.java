@@ -44,22 +44,33 @@ import RobotSquad.RSRobot;
 public class RSBlueRamp extends LinearOpMode {
   RSRobot robot;
 
-  DcMotor motor1;
+  DcMotor motorFrontRight;
+  DcMotor motorFrontLeft;
+  DcMotor motorBackRight;
+  DcMotor motorBackLeft;
 
-  DcMotorController motorController1;
+  DcMotorController motorControllerFrontDrive;
+  DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
 
-  //Gyrothread gyrothread;
+  //GyroThread gyrothread;
 
   @Override
   public void runOpMode() throws InterruptedException {
 
     //initialize motors
-    motor1 = hardwareMap.dcMotor.get("motor_1");
-    motor1.setDirection(DcMotor.Direction.FORWARD);
+    motorFrontLeft = hardwareMap.dcMotor.get("motor_1");
+    motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
+    motorFrontRight = hardwareMap.dcMotor.get("motor_2");
+    motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
+    motorBackLeft = hardwareMap.dcMotor.get("motor_3");
+    motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
+    motorBackRight = hardwareMap.dcMotor.get("motor_4");
+    motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+    motorControllerFrontDrive = hardwareMap.dcMotorController.get("frontdrive");
+    motorControllerRearDrive = hardwareMap.dcMotorController.get("reardrive");
 
-    motorController1 = hardwareMap.dcMotorController.get("drive");
-    //gyro = hardwareMap.gyroSensor.get("gyro");
+    gyro = hardwareMap.gyroSensor.get("gyro");
 
     robot = new RSRobot(null);
 
@@ -67,12 +78,12 @@ public class RSBlueRamp extends LinearOpMode {
     robot.setMyAlliance(RSRobot.Alliance.BLUE);
 
     // pass motor objects to robot
-    robot.SetFrontRightMotor(null);
-    robot.SetFrontLeftMotor(null);
-    robot.SetBackRightMotor(null);
-    robot.SetBackLeftMotor(motor1);
-    robot.setMotorControllerFrontDrive(null);
-    robot.setMotorControllerRearDrive(motorController1);
+    robot.SetFrontRightMotor(motorFrontRight);
+    robot.SetFrontLeftMotor(motorFrontLeft);
+    robot.SetBackRightMotor(motorBackRight);
+    robot.SetBackLeftMotor(motorBackLeft);
+    robot.setMotorControllerFrontDrive(motorControllerFrontDrive);
+    robot.setMotorControllerRearDrive(motorControllerRearDrive);
 
     robot.setOpMode(this);
 
@@ -83,6 +94,6 @@ public class RSBlueRamp extends LinearOpMode {
 
 
     //robot.SpinRight(.8, 360);
-    robot.DriveForward(.5, 64);
+    robot.DriveForward(1.0, 50);
   }
 }
