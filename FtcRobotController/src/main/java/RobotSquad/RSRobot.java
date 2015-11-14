@@ -4,10 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.lang.Object;
+
 import java.lang.Math;
 //import com.qualcomm.robotcore.hardware.GyroSensor;
 
@@ -27,8 +24,7 @@ public class RSRobot {
     DcMotorController motorControllerRearDrive;
     private GyroThread gyrothread;
     private GyroSensor gyro;
-    double minSpinRampUpPow = .2;
-    double minSpinRampDownPow = .1;
+
     public enum Alliance{
         BLUE  (1),
         RED  (-1);
@@ -228,21 +224,22 @@ public class RSRobot {
     double calculateTurnPow(double totalTurn, double currentHeading, double maxPow) {
         double calculatedPow = 0;
         double rampUpCalcPow = 0;
-        double minPow = .2;
+        double minSpinRampUpPow = .2;
+        double minSpinRampDownPow = .1;
         double rampDownCalcPow = 0;
         //number of degrees for speeding up
         double rampUpDegrees = 30;
         //number of degrees for slowing down
         double rampDownDegrees = 30;
 
-        rampUpCalcPow = minPow + (((maxPow - minPow) / rampUpDegrees) * currentHeading);
-        rampDownCalcPow = minPow + (((minPow - maxPow) / rampDownDegrees) * (currentHeading - totalTurn));
+        rampUpCalcPow = minSpinRampUpPow + (((maxPow - minSpinRampUpPow) / rampUpDegrees) * currentHeading);
+        rampDownCalcPow = minSpinRampDownPow + (((minSpinRampDownPow - maxPow) / rampDownDegrees) * (currentHeading - totalTurn));
 
         calculatedPow = Math.min(maxPow, rampUpCalcPow);
         calculatedPow = Math.min(calculatedPow, rampDownCalcPow);
 
-        if (calculatedPow < minPow) {
-            calculatedPow = minPow;
+        if (calculatedPow < minSpinRampDownPow) {
+            calculatedPow = minSpinRampDownPow;
 
         }
         return Range.clip(calculatedPow, -1, 1);
