@@ -5,13 +5,13 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 /**
  * Created by Tony on 9/20/2015.
  */
-public class Gyrothread extends Thread {
+public class GyrothreadTemp extends Thread {
 
 
     double currentHeading;
     double calibratedGyroRotation;
     GyroSensor gyro;
-    public Gyrothread(GyroSensor g){
+    public GyrothreadTemp(GyroSensor g){
         currentHeading = 0;
         gyro = g;
         calibratedGyroRotation = 0;
