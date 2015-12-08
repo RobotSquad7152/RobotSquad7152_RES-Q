@@ -30,7 +30,11 @@
   <uses-permission
     android:name="android.permission.WRITE_SETTINGS"
     android:required="true" />
+  <uses-permission android:name="android.permission.CAMERA" />
 
+  <uses-feature android:name="android.hardware.camera" />
+  <uses-feature android:name="android.hardware.camera.front" />
+  <uses-feature android:name="android.hardware.camera.back" />
   <uses-feature android:name="android.hardware.usb.accessory" />
 
   <application
@@ -85,6 +89,10 @@
         <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity>
+
+
+
+
   </application>
 
 </manifest>

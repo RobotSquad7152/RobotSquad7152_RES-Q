@@ -54,45 +54,39 @@ public class FtcOpModeRegister implements OpModeRegister {
      *
      * If two or more op modes are registered with the same name, the app will display an error.
      */
-    manager.register("RStest2", RStest2.class);
-    //manager.register("NullOp", NullOp.class);
-    manager.register("RSBlueRamp", RSBlueRamp.class);
-    //manager.register("MatrixK9TeleOp", MatrixK9TeleOp.class);
+
+    //Test Program
+    //manager.register("RStest2", RStest2.class);
+
+    //Tele-op Program
     manager.register("RSTeleOp", RSTeleOp.class);
-   // manager.register ("PushBotAuto", PushBotAuto.class);
-   // manager.register ("PushBotManual", PushBotManual.class);
-   // manager.register ("RStest", RStest.class);
+    manager.register("CameraOp", CameraOp.class);
+    //Autonomous Programs
+      //Blue Alliance Programs No Delays
+      manager.register("B_1_OMR_0", B_1_OMR_0.class);
+      manager.register("B_1_OMB_0", B_1_OMB_0.class);
+      manager.register("B_3_OMR_0", B_3_OMR_0.class);
+      manager.register("B_3_OMB_0", B_3_OMB_0.class);
+      //Red Alliance Programs No Delays
+      manager.register("R_1_OMB_0", R_1_OMB_0.class);
+      manager.register("R_1_OMR_0", R_1_OMR_0.class);
+      manager.register("R_3_OMB_0", R_3_OMB_0.class);
+      manager.register("R_3_OMR_0", R_3_OMR_0.class);
+      //Blue Alliance Programs with 10 second delays
+      manager.register("B_1_OMR_10", B_1_OMR_10.class);
+      manager.register("B_1_OMB_10", B_1_OMB_10.class);
+      manager.register("B_3_OMR_10", B_3_OMR_10.class);
+      manager.register("B_3_OMB_10", B_3_OMB_10.class);
+      //Red Alliance Programs with 10 second delays
+      manager.register("R_1_OMB_10", R_1_OMB_10.class);
+      manager.register("R_1_OMR_10", R_1_OMR_10.class);
+      manager.register("R_3_OMB_10", R_3_OMB_10.class);
+      manager.register("R_3_OMR_10", R_3_OMR_10.class);
 
     /*
      * Uncomment any of the following lines if you want to register an op mode.
      */
 
-    //manager.register("AdafruitRGBExample", AdafruitRGBExample.class);
-    //manager.register("ColorSensorDriver", ColorSensorDriver.class);
-
-    //manager.register("IrSeekerOp", IrSeekerOp.class);
-    //manager.register("CompassCalibration", CompassCalibration.class);
-    //manager.register("I2cAddressChangeExample", LinearI2cAddressChange.class);
-
-
-    //manager.register("NxtTeleOp", NxtTeleOp.class);
-    
-    //manager.register("LinearK9TeleOp", LinearK9TeleOp.class);
-    //manager.register("LinearIrExample", LinearIrExample.class);
-
-    
-    //manager.register ("PushBotManual1", PushBotManual1.class);
-    //manager.register ("PushBotAutoSensors", PushBotAutoSensors.class);
-    //manager.register ("PushBotIrEvent", PushBotIrEvent.class);
-    
-    //manager.register ("PushBotManualSensors", PushBotManualSensors.class);
-    //manager.register ("PushBotOdsDetectEvent", PushBotOdsDetectEvent.class);
-    //manager.register ("PushBotOdsFollowEvent", PushBotOdsFollowEvent.class);
-    //manager.register ("PushBotTouchEvent", PushBotTouchEvent.class);    
-    
-    //manager.register("PushBotDriveTouch", PushBotDriveTouch.java);
-    //manager.register("PushBotIrSeek", PushBotIrSeek.java);
-    //manager.register("PushBotSquare", PushBotSquare.java);
 
     
     

@@ -48,10 +48,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.hardware.Camera;
 
 import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.ftccommon.FtcEventLoop;
@@ -67,10 +69,13 @@ import com.qualcomm.robotcore.util.Dimmer;
 import com.qualcomm.robotcore.util.ImmersiveMode;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.wifi.WifiDirectAssistant;
+import com.qualcomm.ftcrobotcontroller.opmodes.CameraOp;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.Serializable;
+
+import RobotSquad.CameraPreview;
 
 public class FtcRobotControllerActivity extends Activity {
 
@@ -110,6 +115,42 @@ public class FtcRobotControllerActivity extends Activity {
     }
 
   }
+
+
+  public Camera camera;
+  private Camera openFrontFacingCamera() {
+    DbgLog.msg("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+    int cameraId = -1;
+    Camera cam = null;
+    int numberOfCameras = Camera.getNumberOfCameras();
+    for (int i = 0; i < numberOfCameras; i++) {
+      Camera.CameraInfo info = new Camera.CameraInfo();
+      Camera.getCameraInfo(i, info);
+      if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+        cameraId = i;
+        DbgLog.msg("Found CameraNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
+        break;
+      }
+    }
+    try {
+      cam = Camera.open(cameraId);
+    } catch (Exception e) {
+
+    }
+    return cam;
+  }
+
+  public void initPreview(final Camera camera, final CameraOp context, final Camera.PreviewCallback previewCallback) {
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        context.preview = new CameraPreview(FtcRobotControllerActivity.this, camera, previewCallback);
+        FrameLayout previewLayout = (FrameLayout) findViewById(R.id.previewLayout);
+        previewLayout.addView(context.preview);
+      }
+    });
+  }
+
 
   protected ServiceConnection connection = new ServiceConnection() {
     @Override
@@ -172,6 +213,8 @@ public class FtcRobotControllerActivity extends Activity {
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
     hittingMenuButtonBrightensScreen();
+
+    camera=openFrontFacingCamera();
 
     if (USE_DEVICE_EMULATION) { HardwareFactory.enableDeviceEmulation(); }
   }

@@ -38,10 +38,8 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 
 import RobotSquad.RSRobot;
 
-/**
- * A simple example of a linear op mode that will approach an IR beacon
- */
-public class RSBlueRamp extends LinearOpMode {
+
+public class R_1_OMB_10 extends LinearOpMode {
   RSRobot robot;
 
   DcMotor motorFrontRight;
@@ -53,26 +51,24 @@ public class RSBlueRamp extends LinearOpMode {
   DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
 
-  //GyroThread gyrothread;
-
   @Override
   public void runOpMode() throws InterruptedException {
 
     //initialize motors
-    motorFrontLeft = hardwareMap.dcMotor.get("motor_1");
+    motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
     motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
-    motorFrontRight = hardwareMap.dcMotor.get("motor_2");
+    motorFrontRight = hardwareMap.dcMotor.get("motor_1");
     motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
-    motorBackLeft = hardwareMap.dcMotor.get("motor_3");
+    motorBackLeft = hardwareMap.dcMotor.get("motor_4");
     motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
-    motorBackRight = hardwareMap.dcMotor.get("motor_4");
+    motorBackRight = hardwareMap.dcMotor.get("motor_3");
     motorBackRight.setDirection(DcMotor.Direction.REVERSE);
     motorControllerFrontDrive = hardwareMap.dcMotorController.get("frontdrive");
     motorControllerRearDrive = hardwareMap.dcMotorController.get("reardrive");
 
     gyro = hardwareMap.gyroSensor.get("gyro");
 
-    robot = new RSRobot(null);
+    robot = new RSRobot(gyro);
 
     //This lets the robot know what way to spin based on alliance
     robot.setMyAlliance(RSRobot.Alliance.BLUE);
@@ -92,8 +88,7 @@ public class RSBlueRamp extends LinearOpMode {
 
     waitForStart();
 
-
-    //robot.SpinRight(.8, 360);
-    robot.DriveForward(1.0, 50);
+    // run the autonomous mission
+    robot.auto_1_OMC(RSRobot.Alliance.RED, 10);
   }
 }

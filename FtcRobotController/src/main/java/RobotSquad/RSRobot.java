@@ -20,6 +20,7 @@ public class RSRobot {
     DcMotor motorFrontLeft;
     DcMotor motorBackRight;
     DcMotor motorBackLeft;
+    DcMotor motorArm;
     DcMotorController motorControllerFrontDrive;
     DcMotorController motorControllerRearDrive;
     private GyroThread gyrothread;
@@ -54,6 +55,10 @@ public class RSRobot {
     final double motorclicksperrotation = 1120;
     //calculates how far the robot will drive for each motor encoder click
     final double onemotorclick = ((motorgearteeth / wheelgearteeth) * wheelcirccm) / motorclicksperrotation;
+
+
+
+
 
     public void Initialize() {
         if (gyro != null) {
@@ -92,6 +97,10 @@ public class RSRobot {
 
     public void SetBackLeftMotor(DcMotor motor) {
         motorBackLeft = motor;
+    }
+
+    public void SetArmMotor(DcMotor motor) {
+        motorArm = motor;
     }
 
     public void setMotorControllerFrontDrive(DcMotorController motorControllerFrontDrive) {
@@ -190,9 +199,9 @@ public class RSRobot {
         //set current heading to zero
         gyrothread.setCurrentHeading(0);
         //use a while loop to keep motors going until desired heading reached
-        while (java.lang.Math.abs(gyrothread.getCurrentHeading()) < degrees) {
-            calculatedPow = (calculateTurnPow(degrees, gyrothread.getCurrentHeading(), power))*direction*myAlliance.alliance;
-
+        while (java.lang.Math.abs(gyrothread.getCurrentHeading()) < (degrees-10)) {
+            //calculatedPow = (calculateTurnPow(degrees, gyrothread.getCurrentHeading(), power))*direction*myAlliance.alliance;
+            calculatedPow = power*direction*myAlliance.alliance;
             motorFrontRight.setPower(-calculatedPow);
             motorBackRight.setPower(-calculatedPow);
             motorFrontLeft.setPower(calculatedPow);
@@ -208,6 +217,7 @@ public class RSRobot {
         motorBackRight.setPower(0);
         motorFrontLeft.setPower(0);
         motorBackLeft.setPower(0);
+        opMode.waitForNextHardwareCycle();
         return (long)java.lang.Math.abs(gyrothread.getCurrentHeading());
     }
 
@@ -224,8 +234,8 @@ public class RSRobot {
     double calculateTurnPow(double totalTurn, double currentHeading, double maxPow) {
         double calculatedPow = 0;
         double rampUpCalcPow = 0;
-        double minSpinRampUpPow = .2;
-        double minSpinRampDownPow = .1;
+        double minSpinRampUpPow = .6;
+        double minSpinRampDownPow = .6;
         double rampDownCalcPow = 0;
         //number of degrees for speeding up
         double rampUpDegrees = 30;
@@ -248,7 +258,7 @@ public class RSRobot {
     double calculateDrivePow(double totalDistance, double currentDistance, double maxPow) {
         double calculatedPow = 0;
         double rampUpCalcPow = 0;
-        double minPow = .2;
+        double minPow = .6;
         double rampDownCalcPow = 0;
         //distance in cm for speeding up
         double rampUpDistance = 20;
@@ -271,37 +281,45 @@ public class RSRobot {
     private long Drive(double power, long distance, double direction) throws InterruptedException {
         double encoderTarget;
         double calculatedPow = 0;
+        double currentHeading = 0;
+        double leftCalculatedPow = 0;
+        double rightCalculatedPow = 0;
 
         //set current heading to zero
-        //gyrothread.setCurrentheading(0);
+        gyrothread.setCurrentHeading(0);
         //use a while loop to keep motors going until desired heading reached
 
-        motorControllerRearDrive.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
+        motorControllerFrontDrive.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
 
-        motorBackLeft.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
-        motorBackRight.setChannelMode(DcMotorController.RunMode.RESET_ENCODERS);
-        while(motorBackLeft.getCurrentPosition() != 0 || motorBackRight.getCurrentPosition() != 0)
+        motorFrontRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+       // motorFrontRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        while(motorFrontRight.getCurrentPosition() != 0 /*|| motorBackRight.getCurrentPosition() != 0*/)
         {
             opMode.waitForNextHardwareCycle();
         }
-        motorBackLeft.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        motorBackRight.setChannelMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorFrontRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        //motorBackRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
         opMode.waitForNextHardwareCycle();
 
         encoderTarget = distance / onemotorclick;
 
-        while (java.lang.Math.abs(motorBackLeft.getCurrentPosition()) < encoderTarget) {
+        while (java.lang.Math.abs(motorFrontRight.getCurrentPosition()) < encoderTarget) {
 
-            calculatedPow = calculateDrivePow(distance, motorBackLeft.getCurrentPosition()*onemotorclick, power)*direction;
+            currentHeading = gyrothread.getCurrentHeading();
+            //calculatedPow = calculateDrivePow(distance, motorFrontLeft.getCurrentPosition()*onemotorclick, power)*direction;
+            leftCalculatedPow = Range.clip((power*direction) - (currentHeading/ 10), -1, 1);;
+            rightCalculatedPow = Range.clip((power*direction) + (currentHeading/ 10), -1, 1);;
 
-            motorBackLeft.setPower(calculatedPow);
-            motorBackRight.setPower(calculatedPow);
-            motorFrontLeft.setPower(calculatedPow);
-            motorFrontRight.setPower(calculatedPow);
+            motorBackLeft.setPower(leftCalculatedPow);
+            motorBackRight.setPower(rightCalculatedPow);
+            motorFrontLeft.setPower(leftCalculatedPow);
+            motorFrontRight.setPower(rightCalculatedPow);
 
-            opMode.telemetry.addData("Current Encoder Position ", motorBackLeft.getCurrentPosition());
-
+            opMode.telemetry.addData("Current Encoder Position ", motorFrontRight.getCurrentPosition());
+            opMode.telemetry.addData("Current Heading ", currentHeading);
+            opMode.telemetry.addData("left power ", leftCalculatedPow);
+            opMode.telemetry.addData("right power ", rightCalculatedPow);
             opMode.waitForNextHardwareCycle();
 
         }
@@ -310,6 +328,7 @@ public class RSRobot {
         motorFrontLeft.setPower(0);
         motorBackRight.setPower(0);
         motorFrontRight.setPower(0);
+        opMode.waitForNextHardwareCycle();
 
         return (distance);
     }
@@ -322,4 +341,118 @@ public class RSRobot {
         //Calling drive function and -1 is backward
         return(Drive(power, distance, -1));
     }
+
+    public void auto_1_OMC(Alliance alliance, long delay) throws InterruptedException
+    {
+        //allows us to use the code on red and blue
+        setMyAlliance(alliance);
+
+        //wait for the specified delay
+        opMode.sleep(delay * 1000);
+
+
+
+        //robot.SpinRight(1, 360);
+        DriveForward(1.0, 85);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 135);
+
+        opMode.sleep(1000);
+
+        DriveForward(1.0, 300);
+    }
+
+
+    public void auto_3_OMF(Alliance alliance, long delay) throws InterruptedException
+    {
+        //allows us to use the code on red and blue
+        setMyAlliance(alliance);
+
+        //wait for the specified delay
+        opMode.sleep(delay * 1000);
+
+
+
+        //robot.SpinRight(1, 360);
+        DriveForward(1.0, 20);
+
+        opMode.sleep(1500);
+
+        SpinRight(1, 45);
+
+        opMode.sleep(1000);
+
+        DriveForward(1.0, 175);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 87);
+
+        opMode.sleep(1000);
+
+        DriveForward(1, 300);
+    }
+
+    public void auto_1_OMF(Alliance alliance, long delay) throws InterruptedException
+    {
+        //allows us to use the code on red and blue
+        setMyAlliance(alliance);
+
+        //wait for the specified delay
+        opMode.sleep(delay * 1000);
+
+
+        //robot.SpinRight(1, 360);
+        DriveForward(1.0, 85);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 45);
+
+        opMode.sleep(1000);
+
+        DriveForward(1.0, 60);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 90);
+
+        opMode.sleep(1000);
+
+        DriveForward(1, 300);
+    }
+
+    public void auto_3_OMC(Alliance alliance, long delay) throws InterruptedException
+    {
+        //allows us to use the code on red and blue
+        setMyAlliance(alliance);
+
+        //wait for the specified delay
+        opMode.sleep(delay * 1000);
+
+
+        //robot.SpinRight(1, 360);
+        DriveForward(1.0, 20);
+
+        opMode.sleep(1500);
+
+        SpinRight(1, 45);
+
+        opMode.sleep(1000);
+
+        DriveForward(1.0, 115);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 87);
+
+        opMode.sleep(1000);
+
+        DriveForward(1, 300);
+    }
+
+
+
 }

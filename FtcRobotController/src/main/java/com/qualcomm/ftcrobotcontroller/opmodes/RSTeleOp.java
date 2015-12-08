@@ -54,9 +54,13 @@ public class RSTeleOp extends OpMode {
 	DcMotor motorFrontLeft;
 	DcMotor motorBackRight;
 	DcMotor motorBackLeft;
+	DcMotor motorArm;
+	Servo servoZip;
 	double leftPower = 0;
 	double rightPower = 0;
+	double armPower = 0;
 	double deadZone = .1;
+	double servoZipPos = 0.25;
 
 	/**
 	 * Constructor
@@ -90,16 +94,20 @@ public class RSTeleOp extends OpMode {
 		 *    "servo_1" controls the arm joint of the manipulator.
 		 *    "servo_6" controls the claw joint of the manipulator.
 		 */
-		motorFrontLeft = hardwareMap.dcMotor.get("motor_1");
+		motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
 		motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
-		motorFrontRight = hardwareMap.dcMotor.get("motor_2");
+		motorFrontRight = hardwareMap.dcMotor.get("motor_1");
 		motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
-		motorBackLeft = hardwareMap.dcMotor.get("motor_3");
+		motorBackLeft = hardwareMap.dcMotor.get("motor_4");
 		motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
-		motorBackRight = hardwareMap.dcMotor.get("motor_4");
+		motorBackRight = hardwareMap.dcMotor.get("motor_3");
 		motorBackRight.setDirection(DcMotor.Direction.REVERSE);
 
+		motorArm = hardwareMap.dcMotor.get("motor_arm");
+		motorArm.setDirection(DcMotor.Direction.FORWARD);
 
+		servoZip = hardwareMap.servo.get("servo_zip");
+		servoZip.setPosition(servoZipPos);
 
 	}
 
@@ -112,8 +120,16 @@ public class RSTeleOp extends OpMode {
 	public void loop() {
 
 
-		double y1 = gamepad1.left_stick_y;
+		double y1 = -gamepad1.left_stick_y;
 		double x2 = gamepad1.right_stick_x;
+
+		double j2y1 = gamepad2.left_stick_y;
+
+
+
+		telemetry.addData("y1 ", y1);
+		telemetry.addData("x2 ", x2);
+		telemetry.addData("servo", servoZip.getPosition());
 
 		if(y1 >= deadZone)
 		{
@@ -172,11 +188,46 @@ public class RSTeleOp extends OpMode {
 		motorBackLeft.setPower(Range.clip(leftPower, -1, 1));
 
 
+		if((j2y1 < -deadZone) || (j2y1 > deadZone))
+		{
+			armPower = Range.clip(j2y1, -1, 1)/3;
+		}
+		else
+		{
+			armPower = 0;
 
+		}
 
+		motorArm.setPower(armPower);
 
+		if(gamepad2.a){
+			servoZipPos = 0.8; //down
+		}
+		if (gamepad2.b) {
+			servoZipPos = 0.25; //up
+		}
 
+		servoZip.setPosition(servoZipPos);
 
+		if( gamepad1.dpad_down )
+			motorBackLeft.setPower(1);
+		else
+			motorBackLeft.setPower(0);
+
+		if( gamepad1.dpad_right )
+			motorBackRight.setPower(1);
+		else
+			motorBackRight.setPower(0);
+
+		if( gamepad1.dpad_left )
+			motorFrontLeft.setPower(1);
+		else
+			motorFrontLeft.setPower(0);
+
+		if( gamepad1.dpad_up )
+			motorFrontRight.setPower(1);
+		else
+			motorFrontRight.setPower(0);
 	}
 
 	/*

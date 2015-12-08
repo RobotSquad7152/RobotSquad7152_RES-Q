@@ -64,7 +64,7 @@ public class GyroThread extends Thread {
         do{
 
 
-            while (stopwatch.elapsedTime() < 8)
+            while (stopwatch.elapsedTime() < 5)
                 try {
                     sleep(1);
                 } catch (InterruptedException e) {
@@ -75,7 +75,7 @@ public class GyroThread extends Thread {
             stopwatch.Resetstopwatch();
 
             // calculate turn based on gyro reading divided by the time taken since the last reading (6ms)
-            currentHeading = currentHeading + (gyro.getRotation()- calibratedGyroRotation) * .008;
+            currentHeading = currentHeading + (gyro.getRotation()- calibratedGyroRotation) * .005;
         }while(true);
 
 

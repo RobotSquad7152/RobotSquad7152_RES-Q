@@ -32,56 +32,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 
 import RobotSquad.RSRobot;
 
-/**
- * A simple example of a linear op mode that will approach an IR beacon
- */
-public class RStest2 extends LinearOpMode {
+
+public class B_1_OMR_0 extends LinearOpMode {
   RSRobot robot;
 
-  DcMotor motor1;
+  DcMotor motorFrontRight;
+  DcMotor motorFrontLeft;
+  DcMotor motorBackRight;
+  DcMotor motorBackLeft;
 
-  DcMotorController motorController1;
+  DcMotorController motorControllerFrontDrive;
+  DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
-
-  //GyroThread gyrothread;
 
   @Override
   public void runOpMode() throws InterruptedException {
 
     //initialize motors
-    motor1 = hardwareMap.dcMotor.get("motor_1");
-    motor1.setDirection(DcMotor.Direction.FORWARD);
+    motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
+    motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
+    motorFrontRight = hardwareMap.dcMotor.get("motor_1");
+    motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
+    motorBackLeft = hardwareMap.dcMotor.get("motor_4");
+    motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
+    motorBackRight = hardwareMap.dcMotor.get("motor_3");
+    motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+    motorControllerFrontDrive = hardwareMap.dcMotorController.get("frontdrive");
+    motorControllerRearDrive = hardwareMap.dcMotorController.get("reardrive");
 
-    ColorSensor colorSensor;
+    gyro = hardwareMap.gyroSensor.get("gyro");
 
+    robot = new RSRobot(gyro);
 
-    colorSensor = hardwareMap.colorSensor.get("colorSensor");
-
-    // turn the LED on in the beginning, just so user will know that the sensor is active.
-    colorSensor.enableLed(true);
-
-
-
-    motorController1 = hardwareMap.dcMotorController.get("drive");
-    //gyro = hardwareMap.gyroSensor.get("gyro");
-
-    robot = new RSRobot(null);
-
+    //This lets the robot know what way to spin based on alliance
+    robot.setMyAlliance(RSRobot.Alliance.BLUE);
 
     // pass motor objects to robot
-    robot.SetFrontRightMotor(null);
-    robot.SetFrontLeftMotor(null);
-    robot.SetBackRightMotor(null);
-    robot.SetBackLeftMotor(motor1);
-    robot.setMotorControllerFrontDrive(null);
-    robot.setMotorControllerRearDrive(motorController1);
+    robot.SetFrontRightMotor(motorFrontRight);
+    robot.SetFrontLeftMotor(motorFrontLeft);
+    robot.SetBackRightMotor(motorBackRight);
+    robot.SetBackLeftMotor(motorBackLeft);
+    robot.setMotorControllerFrontDrive(motorControllerFrontDrive);
+    robot.setMotorControllerRearDrive(motorControllerRearDrive);
 
     robot.setOpMode(this);
 
@@ -90,14 +88,7 @@ public class RStest2 extends LinearOpMode {
 
     waitForStart();
 
-    while (true) {    // send the info back to driver station using telemetry function.
-      telemetry.addData("Clear", colorSensor.alpha());
-      telemetry.addData("Red  ", colorSensor.red());
-      telemetry.addData("Green", colorSensor.green());
-      telemetry.addData("Blue ", colorSensor.blue());
-    }
-
-      //robot.SpinRight(.8, 360);
-   // robot.DriveForward(.5, 64);
+    // run the autonomous mission
+    robot.auto_1_OMC(RSRobot.Alliance.BLUE, 0);
   }
 }
