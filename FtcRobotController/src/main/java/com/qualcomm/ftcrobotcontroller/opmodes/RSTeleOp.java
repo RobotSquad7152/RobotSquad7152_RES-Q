@@ -33,8 +33,11 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
+
+import RobotSquad.BucketThread;
 
 /**
  * TeleOp Mode
@@ -55,13 +58,28 @@ public class RSTeleOp extends OpMode {
 	DcMotor motorBackRight;
 	DcMotor motorBackLeft;
 	DcMotor motorArm;
-	Servo servoZip;
+	DcMotor motorSlide;
+	DcMotor motorBucket;
+	DcMotor motorSpinner;
+	Servo servoDoor;
+	Servo servoHopper;
+	Servo servoChurro;
+
+	BucketThread bucketThread;
 	double leftPower = 0;
 	double rightPower = 0;
 	double armPower = 0;
 	double deadZone = .1;
-	double servoZipPos = 0.25;
-
+	double servoDoorOpen = .8;
+	double servoDoorClose = 0;
+	double servoHopperPos = 0.5;//stopped continuous
+	int bucketTarget;
+	int bucketPos = 0;
+	boolean continuousSpin = false;
+	boolean j1aPressed = false;
+	boolean j1bPressed = false;
+	double servoChurroUp = .5;
+	double servoChurroDown = .3;
 	/**
 	 * Constructor
 	 */
@@ -76,24 +94,15 @@ public class RSTeleOp extends OpMode {
 	 */
 	@Override
 	public void init() {
+		/*Controller		Config Name		Robot
+		Front Drive Port 1	motor_1			Front Right
+		Front Drive Port 2	motor_2			Front Left
+		Rear Drive Port 1	motor_3			Back Right
+		Rear Drive Port 2	motor_4			Back Left
+		Extend/hang			motor_5			Slide motor
+		Harvester port 1	motor_8			Harvester bucket
+		Harvester port 2	motor_7			Harvester spinner*/
 
-
-		/*
-		 * Use the hardwareMap to get the dc motors and servos by name. Note
-		 * that the names of the devices must match the names used when you
-		 * configured your robot and created the configuration file.
-		 */
-		
-		/*
-		 * For the demo Tetrix K9 bot we assume the following,
-		 *   There are two motors "motor_1" and "motor_2"
-		 *   "motor_1" is on the right side of the bot.
-		 *   "motor_2" is on the left side of the bot and reversed.
-		 *   
-		 * We also assume that there are two servos "servo_1" and "servo_6"
-		 *    "servo_1" controls the arm joint of the manipulator.
-		 *    "servo_6" controls the claw joint of the manipulator.
-		 */
 		motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
 		motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
 		motorFrontRight = hardwareMap.dcMotor.get("motor_1");
@@ -103,13 +112,47 @@ public class RSTeleOp extends OpMode {
 		motorBackRight = hardwareMap.dcMotor.get("motor_3");
 		motorBackRight.setDirection(DcMotor.Direction.REVERSE);
 
-		motorArm = hardwareMap.dcMotor.get("motor_arm");
-		motorArm.setDirection(DcMotor.Direction.FORWARD);
+		motorSlide = hardwareMap.dcMotor.get("motor_5");
+		motorSlide.setDirection(DcMotor.Direction.FORWARD);
 
-		servoZip = hardwareMap.servo.get("servo_zip");
-		servoZip.setPosition(servoZipPos);
+		motorBucket = hardwareMap.dcMotor.get("motor_8");
+		motorBucket.setDirection(DcMotor.Direction.FORWARD);
+
+		motorSpinner = hardwareMap.dcMotor.get("motor_7");
+		motorSpinner.setDirection(DcMotor.Direction.FORWARD);
+
+		servoDoor = hardwareMap.servo.get("servo_door");
+		servoDoor.setPosition(servoDoorClose);
+
+		servoHopper = hardwareMap.servo.get("servo_hopper");
+		servoHopper.setPosition(servoHopperPos);
+
+		servoChurro = hardwareMap.servo.get("servo_churro");
+		servoChurro.setPosition(servoChurroUp);
+4
+		bucketThread = new BucketThread(motorBucket);
+
+		bucketThread.InitalizeBucket();
+
+		bucketTarget = motorBucket.getCurrentPosition();
+
+
+
+
+	//	motorBucket.getController().setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
+
+	//	motorBucket.setMode(DcMotorController.RunMode.RESET_ENCODERS);
 
 	}
+
+	@Override
+	public void start() {
+		motorBucket.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+
+		bucketThread.start();
+
+	}
+
 
 	/*
 	 * This method will be called repeatedly in a loop
@@ -120,67 +163,67 @@ public class RSTeleOp extends OpMode {
 	public void loop() {
 
 
-		double y1 = -gamepad1.left_stick_y;
-		double x2 = gamepad1.right_stick_x;
+
+		double j1y1 = -gamepad1.left_stick_y;
+		double j1x2 = gamepad1.right_stick_x;
 
 		double j2y1 = gamepad2.left_stick_y;
 
 
 
-		telemetry.addData("y1 ", y1);
-		telemetry.addData("x2 ", x2);
-		telemetry.addData("servo", servoZip.getPosition());
 
-		if(y1 >= deadZone)
+	//	telemetry.addData("y1 ", j1y1);
+	//	telemetry.addData("x2 ", j1x2);
+		telemetry.addData("servo", servoDoor.getPosition());
+		telemetry.addData("servo", servoChurro.getPosition());
+
+		if (j1y1 >= deadZone)
 		{
-			if(x2 >= deadZone)
+			if (j1x2 >= deadZone)
 			{
-				leftPower = y1;
-				rightPower = y1 - (y1 * x2);
-			}
-			else if(x2 < -deadZone)
+				leftPower = j1y1;
+				rightPower = j1y1 - (j1y1 * j1x2);
+			} else if (j1x2 < -deadZone)
 			{
-				leftPower = y1 - (y1 * -x2);
-				rightPower = y1;
-			}
-			else
+				leftPower = j1y1 - (j1y1 * -j1x2);
+				rightPower = j1y1;
+			} else
 			{
-				leftPower = y1;
-				rightPower = y1;
+				leftPower = j1y1;
+				rightPower = j1y1;
 			}
 
-		}
-		else if(y1 <= -deadZone)
+		} else if (j1y1 <= -deadZone)
 		{
-			if(x2 >= deadZone)
+			if (j1x2 >= deadZone)
 			{
-				leftPower = y1;
-				rightPower = y1 + (y1 * -x2);
-			}
-			else if (x2 < -deadZone)
+				leftPower = j1y1;
+				rightPower = j1y1 + (j1y1 * -j1x2);
+			} else if (j1x2 < -deadZone)
 			{
-				leftPower = y1 + (y1 * x2);
-				rightPower = y1;
-			}
-			else
+				leftPower = j1y1 + (j1y1 * j1x2);
+				rightPower = j1y1;
+			} else
 			{
-				leftPower = y1;
-				rightPower = y1;
+				leftPower = j1y1;
+				rightPower = j1y1;
 			}
-		}
-		else //y1 is equal to 0 for spins
+		} else //y1 is equal to 0 for spins
 		{
-			if((x2 < -deadZone) || (x2 > deadZone))
+			if ((j1x2 < -deadZone) || (j1x2 > deadZone))
 			{
-				leftPower = x2;
-				rightPower = -x2;
-			}
-			else
+				leftPower = j1x2;
+				rightPower = -j1x2;
+			} else
 			{
 				leftPower = 0;
+
 				rightPower = 0;
 			}
 		}
+
+		telemetry.addData("left power", "LeftPow " + leftPower);
+		telemetry.addData("right power", "RightPow " + rightPower);
 
 		motorFrontRight.setPower(Range.clip(rightPower, -1, 1));
 		motorBackRight.setPower(Range.clip(rightPower, -1, 1));
@@ -188,47 +231,179 @@ public class RSTeleOp extends OpMode {
 		motorBackLeft.setPower(Range.clip(leftPower, -1, 1));
 
 
-		if((j2y1 < -deadZone) || (j2y1 > deadZone))
+		if (gamepad2.dpad_up)
 		{
-			armPower = Range.clip(j2y1, -1, 1)/3;
+			motorSlide.setPower(1);
+		}
+		else if(gamepad2.dpad_down)
+		{
+			motorSlide.setPower(-1);
 		}
 		else
 		{
-			armPower = 0;
+			motorSlide.setPower(0);
 
 		}
 
-		motorArm.setPower(armPower);
-
-		if(gamepad2.a){
-			servoZipPos = 0.8; //down
+		if (gamepad2.dpad_left)
+		{
+			//hopper left
+			servoHopperPos = 0;
 		}
-		if (gamepad2.b) {
-			servoZipPos = 0.25; //up
+		else if (gamepad2.dpad_right)
+		{
+			//hopper  right
+			servoHopperPos = 1;
+		}
+		else
+		{
+			//hopper stopped
+			servoHopperPos = 0.5;
 		}
 
-		servoZip.setPosition(servoZipPos);
+		servoHopper.setPosition(servoHopperPos);
 
-		if( gamepad1.dpad_down )
-			motorBackLeft.setPower(1);
-		else
-			motorBackLeft.setPower(0);
+		if (gamepad2.x)
+		{
+			servoDoor.setPosition(Range.clip(servoDoorOpen, 0, 1));
 
-		if( gamepad1.dpad_right )
-			motorBackRight.setPower(1);
-		else
-			motorBackRight.setPower(0);
 
-		if( gamepad1.dpad_left )
-			motorFrontLeft.setPower(1);
-		else
-			motorFrontLeft.setPower(0);
+		}
+		if (gamepad2.y)
+		{
+			servoDoor.setPosition(Range.clip(servoDoorClose, 0, 1));
+		}
 
-		if( gamepad1.dpad_up )
-			motorFrontRight.setPower(1);
+		if (gamepad1.x)
+		{
+			servoChurro.setPosition(Range.clip(servoChurroUp, 0, 1));
+
+
+		}
+		if (gamepad1.y)
+		{
+			servoChurro.setPosition(Range.clip(servoChurroDown, 0, 1));
+		}
+
+		//telemetry.addData("ServoDoor pos " , "servoDoorpos;" + servoDoorPos);
+
+		if ((j2y1 < -deadZone) || (j2y1 > deadZone))
+		{
+			if (j2y1 < 0)
+			{
+				//harvester up
+			bucketTarget -= 10;
+				//motorBucket.setPower(-0.3);
+			}
+			else if (j2y1 > 0)
+			{
+				//harvester down
+				bucketTarget += 10;
+				//motorBucket.setPower(0.3);
+			}
+
+		}
 		else
-			motorFrontRight.setPower(0);
+		{
+			//motorBucket.setPower(0);
+			bucketTarget = motorBucket.getCurrentPosition();//stop moving after dpad is released
+		}
+
+		bucketThread.targetPos = bucketTarget;
+
+		//bucketThread.targetPos = bucketTarget;
+		bucketPos = motorBucket.getCurrentPosition();
+
+
+	//	telemetry.addData("bucket target " , "bucketTarget;" + bucketTarget);
+		telemetry.addData("bucket position " , "bucketpos;" + bucketPos);
+
+		if (gamepad1.a)
+		{
+			if (!j1aPressed)
+			{
+				j1aPressed = true;
+				//motorSpinner
+				if (continuousSpin)
+				{
+					continuousSpin = false;
+					motorSpinner.setPower(0);
+				}
+				else
+				{
+					continuousSpin = true;
+					motorSpinner.setPower(1);
+				}
+			}
+		}
+		else
+		{
+			j1aPressed = false;
+		}
+
+		if (gamepad1.b)
+		{
+			if (!j1bPressed)
+			{
+				j1bPressed = true;
+				//motorSpinner
+				if (continuousSpin)
+				{
+					continuousSpin = false;
+					motorSpinner.setPower(0);
+				}
+				else
+				{
+					continuousSpin = true;
+					motorSpinner.setPower(-1);
+				}
+			}
+		}
+		else
+		{
+			j1bPressed = false;
+		}
+		if (gamepad1.left_trigger > 0.1) {
+			//motor spinner
+			continuousSpin =false;
+			motorSpinner.setPower(-gamepad1.left_trigger);
+		}else if (gamepad1.right_trigger > 0.1) {
+			//motor spinner
+			continuousSpin = false;
+			motorSpinner.setPower(gamepad1.right_trigger);
+		}
+		else
+		{
+			if (!continuousSpin)
+				motorSpinner.setPower(0);
+		}
+
+
+
+
+
+
+//		if( gamepad1.dpad_down )
+//			motorBackLeft.setPower(1);
+//		else
+//			motorBackLeft.setPower(0);
+//
+//		if( gamepad1.dpad_right )
+//			motorBackRight.setPower(1);
+//		else
+//			motorBackRight.setPower(0);
+//
+//		if( gamepad1.dpad_left )
+//			motorFrontLeft.setPower(1);
+//		else
+//			motorFrontLeft.setPower(0);
+//
+//		if( gamepad1.dpad_up )
+//			motorFrontRight.setPower(1);
+//		else
+//			motorFrontRight.setPower(0);
 	}
+
 
 	/*
 	 * Code to run when the op mode is first disabled goes here

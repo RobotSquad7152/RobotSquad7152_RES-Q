@@ -25,6 +25,7 @@ public class RSRobot {
     DcMotorController motorControllerRearDrive;
     private GyroThread gyrothread;
     private GyroSensor gyro;
+    private BucketThread bucketthread;
 
     public enum Alliance{
         BLUE  (1),
@@ -68,6 +69,12 @@ public class RSRobot {
 
             gyrothread.start();
         }
+
+     //   bucketthread = new BucketThread();
+
+     //   bucketthread.start();
+
+
         if (motorBackRight != null)
             motorBackRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
         if (motorBackLeft != null)
@@ -451,6 +458,41 @@ public class RSRobot {
         opMode.sleep(1000);
 
         DriveForward(1, 300);
+    }
+
+    public void pre_Match_Test() throws InterruptedException
+    {
+        opMode.sleep(1000);
+
+        DriveForward(1, 100);
+
+        opMode.sleep(1000);
+
+        DriveBackward(1, 100);
+
+        opMode.sleep(1000);
+
+        SpinRight(1, 90);
+
+        opMode.sleep(1000);
+
+        SpinLeft(1, 90);
+
+        //move servoZip
+
+        //spin collector
+
+        //move collection bucket
+
+        //move scoring bucket
+
+        //move scoring bucket servo
+
+        //move climber dumper
+
+        //move hanger thingy
+
+        //move button presser
     }
 
 

@@ -1,26 +1,22 @@
-package com.qualcomm.ftcrobotcontroller.opmodes;
+package RobotSquad;
 
-import RobotSquad.CameraPreview;
-
-import com.qualcomm.ftccommon.DbgLog;
-import com.qualcomm.ftcrobotcontroller.FtcRobotControllerActivity;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import java.io.ByteArrayOutputStream;
-
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
-import android.util.Log;
+import com.qualcomm.robotcore.robocol.Telemetry;
+
+import com.qualcomm.ftcrobotcontroller.FtcRobotControllerActivity;
+
+import java.io.ByteArrayOutputStream;
 
 /**
- * TeleOp Mode
- * <p>
- *Enables control of the robot via the gamepad
+ * Created by Tony on 12/21/2015.
  */
-public class CameraOp extends OpMode {
+public class RSCamera {
     private Camera camera;
     public CameraPreview preview;
     public Bitmap image;
@@ -29,6 +25,30 @@ public class CameraOp extends OpMode {
     private YuvImage yuvImage = null;
     private int looped = 0;
     private String data;
+    private Context context;
+    private Telemetry telemetry;
+
+    public RSCamera(Context context, Telemetry telemetry) {
+        this.context = context;
+        this.telemetry = telemetry;
+    }
+
+
+    public void init() {
+        camera = ((FtcRobotControllerActivity) context).camera;
+
+        camera.setPreviewCallback(previewCallback);
+
+
+        Camera.Parameters parameters = camera.getParameters();
+
+        data = parameters.flatten();
+
+
+        ((FtcRobotControllerActivity) context).initPreviewLinear(camera, this, previewCallback);
+    }
+
+
 
     private int red(int pixel) {
         return (pixel >> 16) & 0xff;
@@ -59,32 +79,14 @@ public class CameraOp extends OpMode {
         byte[] imageBytes = out.toByteArray();
         image = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
-    /*
-     * Code to run when the op mode is first enabled goes here
-     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#start()
-     */
-    @Override
-    public void init() {
 
 
-        camera = ((FtcRobotControllerActivity)hardwareMap.appContext).camera;
-
-        camera.setPreviewCallback(previewCallback);
-
-
-        Camera.Parameters parameters = camera.getParameters();
-
-        data = parameters.flatten();
-
-
-        ((FtcRobotControllerActivity) hardwareMap.appContext).initPreview(camera, this, previewCallback);
-    }
 
     /*
      * This method will be called repeatedly in a loop
      * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#loop()
      */
-    public int highestColor(int red, int green, int blue) {
+    private int highestColor(int red, int green, int blue) {
         int[] color = {red,green,blue};
         int value = 0;
         for (int i = 1; i < 3; i++) {
@@ -95,47 +97,17 @@ public class CameraOp extends OpMode {
         return value;
     }
 
-    @Override
-    public void loop() {
+
+    public int calculateMiddle()
+    {
+        int middle = 0;
         if (yuvImage != null) {
             int redValue = 0;
             int blueValue = 0;
             int greenValue = 0;
 
             convertImage();
-//            for (int x = 0; x < width/2; x++) {
-//                for (int y = 0; y < height; y++) {
-//                    int pixel = image.getPixel(x, y);
-//                    redValue += red(pixel);
-//                    blueValue += blue(pixel);
-//                }
-//            }
-//            int color = highestColor(redValue, greenValue, blueValue);
-//            String colorString = "";
-//            switch (color) {
-//                case 0:
-//                    colorString = "RED";
-//                    break;
-//                case 1:
-//                    colorString = "GREEN";
-//                    break;
-//                case 2:
-//                    colorString = "BLUE";
-//            }
-//            telemetry.addData("Left Color:", "Left Color detected is: " + colorString);
-//            telemetry.addData("Left Red", "Red: " + redValue/(height*width/2));
-//            telemetry.addData("Left Blue", "Blue: " + blueValue/(height*width/2));
-//
-//            redValue = 0;
-//            blueValue = 0;
-//            greenValue = 0;\
-//            for (int x = width/2+1 ; x < width; x++) {
-//                for (int y = 0; y < height; y++) {
-//                    int pixel = image.getPixel(x, y);
-//                    redValue += red(pixel);
-//                    blueValue += blue(pixel);
-//                }
-//            }
+
             int blueCounter = 0;
             int redCounter = 0;
             int blueEndCounter = 0;
@@ -148,9 +120,9 @@ public class CameraOp extends OpMode {
             int redEnd = 0;
             int y = height/2;
             for (int x = 0 ; x < width; x++) {
-                    int pixel = image.getPixel(x, y);
-                    redValue = red(pixel);
-                    blueValue = blue(pixel);
+                int pixel = image.getPixel(x, y);
+                redValue = red(pixel);
+                blueValue = blue(pixel);
 
                 if(blueCounter <= 5 && redCounter <= 5)
                 {
@@ -215,7 +187,7 @@ public class CameraOp extends OpMode {
 
 
             }
-            int middle = 0;
+
             if((redStart < blueStart) && (redEnd > 0))
             {
                 middle = redEnd + ((blueStart - redEnd)/2);
@@ -244,9 +216,11 @@ public class CameraOp extends OpMode {
 
 
         }
-        telemetry.addData("Looped","Looped " + Integer.toString(looped) + " times");
+//        telemetry.addData("Looped","Looped " + Integer.toString(looped) + " times");
 
 //        Log.d("Looped:", "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Looped " + looped);
 //        Log.d("DEBUG:",data);
+        return middle;
     }
+
 }

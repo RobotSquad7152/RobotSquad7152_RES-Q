@@ -57,10 +57,14 @@ public class FtcOpModeRegister implements OpModeRegister {
 
     //Test Program
     //manager.register("RStest2", RStest2.class);
+    manager.register("Pre_Match_Test", Pre_Match_Test.class);
+
+    manager.register("NullOp", NullOp.class);
 
     //Tele-op Program
     manager.register("RSTeleOp", RSTeleOp.class);
-    manager.register("CameraOp", CameraOp.class);
+    manager.register("ServoTest", ServoTest.class);
+    manager.register("LinearCameraOp", LinearCameraOp.class);
     //Autonomous Programs
       //Blue Alliance Programs No Delays
       manager.register("B_1_OMR_0", B_1_OMR_0.class);
