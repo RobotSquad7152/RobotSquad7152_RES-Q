@@ -129,7 +129,7 @@ public class RSTeleOp extends OpMode {
 
 		servoChurro = hardwareMap.servo.get("servo_churro");
 		servoChurro.setPosition(servoChurroUp);
-4
+
 		bucketThread = new BucketThread(motorBucket);
 
 		bucketThread.InitalizeBucket();
