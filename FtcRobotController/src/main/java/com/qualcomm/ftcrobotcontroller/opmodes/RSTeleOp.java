@@ -80,6 +80,8 @@ public class RSTeleOp extends OpMode {
 	boolean j1bPressed = false;
 	double servoChurroUp = .5;
 	double servoChurroDown = .3;
+
+	double servoPos = 0.5;
 	/**
 	 * Constructor
 	 */
@@ -276,16 +278,21 @@ public class RSTeleOp extends OpMode {
 
 		if (gamepad1.x)
 		{
-			servoChurro.setPosition(Range.clip(servoChurroUp, 0, 1));
+
+			servoPos -= 0.01;
+			servoChurro.setPosition(Range.clip(servoPos, 0, 1));
+		//	servoChurro.setPosition(Range.clip(servoChurroUp, 0, 1));
 
 
 		}
 		if (gamepad1.y)
 		{
-			servoChurro.setPosition(Range.clip(servoChurroDown, 0, 1));
+			servoPos += 0.01;
+			servoChurro.setPosition(Range.clip(servoPos, 0, 1));
+		//	servoChurro.setPosition(Range.clip(servoChurroDown, 0, 1));
 		}
 
-		//telemetry.addData("ServoDoor pos " , "servoDoorpos;" + servoDoorPos);
+		telemetry.addData("Churro pos " , "ChurroPos;" + servoPos);
 
 		if ((j2y1 < -deadZone) || (j2y1 > deadZone))
 		{
@@ -412,7 +419,7 @@ public class RSTeleOp extends OpMode {
 	 */
 	@Override
 	public void stop() {
-
+		//bucketThread.stop();
 	}
 
     	
