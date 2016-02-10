@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import RobotSquad.RSRobot;
 
@@ -46,10 +47,15 @@ public class B_1_OMB_0 extends LinearOpMode {
   DcMotor motorFrontLeft;
   DcMotor motorBackRight;
   DcMotor motorBackLeft;
+  DcMotor motorSlide;
+  DcMotor motorBucket;
+  DcMotor motorSpinner;
+  Servo servoChurro;
 
   DcMotorController motorControllerFrontDrive;
   DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
+  double servoChurroUp = 0.15;
 
   @Override
   public void runOpMode() throws InterruptedException {
@@ -63,8 +69,22 @@ public class B_1_OMB_0 extends LinearOpMode {
     motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
     motorBackRight = hardwareMap.dcMotor.get("motor_3");
     motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+
+    motorSlide = hardwareMap.dcMotor.get("motor_5");
+    motorSlide.setDirection(DcMotor.Direction.FORWARD);
+
+    motorBucket = hardwareMap.dcMotor.get("motor_8");
+    motorBucket.setDirection(DcMotor.Direction.FORWARD);
+
+    motorSpinner = hardwareMap.dcMotor.get("motor_7");
+    motorSpinner.setDirection(DcMotor.Direction.FORWARD);
+
+    servoChurro = hardwareMap.servo.get("servo_churro");
+    servoChurro.setPosition(servoChurroUp);
+
     motorControllerFrontDrive = hardwareMap.dcMotorController.get("frontdrive");
     motorControllerRearDrive = hardwareMap.dcMotorController.get("reardrive");
+
 
     gyro = hardwareMap.gyroSensor.get("gyro");
 
@@ -86,9 +106,13 @@ public class B_1_OMB_0 extends LinearOpMode {
     // calibrate gyro etc.
     robot.Initialize();
 
+    robot.initializeHarvester();
+
     waitForStart();
+    robot.startHarvester();
 
     // run the autonomous mission
     robot.auto_1_OMF(RSRobot.Alliance.BLUE, 0);
+    robot.stopHarvester();
   }
 }

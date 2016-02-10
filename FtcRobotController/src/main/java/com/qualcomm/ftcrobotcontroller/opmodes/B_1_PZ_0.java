@@ -39,10 +39,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import RobotSquad.RSRobot;
 
-/**
- * A simple example of a linear op mode that will approach an IR beacon
- */
-public class B_3_OMR_0 extends LinearOpMode {
+
+public class B_1_PZ_0 extends LinearOpMode {
   RSRobot robot;
 
   DcMotor motorFrontRight;
@@ -54,15 +52,14 @@ public class B_3_OMR_0 extends LinearOpMode {
   DcMotor motorSpinner;
   Servo servoChurro;
   Servo servoHopper;
-
-  double servoChurroUp = 0.15;
-  double servoHopperPos = .5;
+  Servo servoClimber;
 
   DcMotorController motorControllerFrontDrive;
   DcMotorController motorControllerRearDrive;
   GyroSensor gyro;
-
-  //GyroThread gyrothread;
+  double servoChurroUp = 0.15;
+  double servoHopperPos = .5;
+  double servoCimberClose = 0;
 
   @Override
   public void runOpMode() throws InterruptedException {
@@ -91,6 +88,9 @@ public class B_3_OMR_0 extends LinearOpMode {
 
     servoHopper = hardwareMap.servo.get("servo_hopper");
     servoHopper.setPosition(servoHopperPos);
+
+    servoClimber = hardwareMap.servo.get("servo_climber");
+    servoClimber.setPosition(servoCimberClose);
 
     motorControllerFrontDrive = hardwareMap.dcMotorController.get("frontdrive");
     motorControllerRearDrive = hardwareMap.dcMotorController.get("reardrive");
@@ -122,10 +122,9 @@ public class B_3_OMR_0 extends LinearOpMode {
 
     waitForStart();
     robot.startHarvester();
-// run the autonomous mission
-    robot.auto_3_OMC(RSRobot.Alliance.BLUE, 0);
 
-   // robot.DriveForward(1.0, 90);
-   // robot.SpinRight(1, 135);
+    // run the autonomous mission
+    robot.auto_1_PZ(RSRobot.Alliance.BLUE, 0);
+    robot.stopHarvester();
   }
 }

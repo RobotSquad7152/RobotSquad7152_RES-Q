@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import java.lang.Math;
+
 //import com.qualcomm.robotcore.hardware.GyroSensor;
 
 /**
@@ -20,12 +21,13 @@ public class RSRobot {
     DcMotor motorFrontLeft;
     DcMotor motorBackRight;
     DcMotor motorBackLeft;
-    DcMotor motorArm;
+    DcMotor motorHarvester;
+    DcMotor motorSpinner;
     DcMotorController motorControllerFrontDrive;
     DcMotorController motorControllerRearDrive;
     private GyroThread gyrothread;
     private GyroSensor gyro;
-    private BucketThread bucketthread;
+    private BucketThread bucketThread;
 
     public enum Alliance{
         BLUE  (1),
@@ -45,13 +47,13 @@ public class RSRobot {
     }
 
     //defines drive wheel diameter -- a 2 inch sprocket this year
-    final double wheeldiacm = 2 * 2.54;
+    final double wheeldiacm = 2.76 * 2.54;
     //defines drive wheel circumference
     final double wheelcirccm = wheeldiacm * 3.141592653589793;
     //defines how many teeth on gear attached to motor (no gearing this year)
-    final double motorgearteeth = 1;
+    final double motorgearteeth = 3;
     //defines how many teeth on gear attached to wheel (no gearing this year)
-    final double wheelgearteeth = 1;
+    final double wheelgearteeth = 2;
     //encoder counts per rotation of the motor
     final double motorclicksperrotation = 1120;
     //calculates how far the robot will drive for each motor encoder click
@@ -73,6 +75,7 @@ public class RSRobot {
      //   bucketthread = new BucketThread();
 
      //   bucketthread.start();
+
 
 
         if (motorBackRight != null)
@@ -106,9 +109,11 @@ public class RSRobot {
         motorBackLeft = motor;
     }
 
-    public void SetArmMotor(DcMotor motor) {
-        motorArm = motor;
+    public void SetHarvesterMotor(DcMotor motor) {
+        motorHarvester = motor;
     }
+
+    public void SetSpinnerMotor(DcMotor motor) {motorSpinner = motor;}
 
     public void setMotorControllerFrontDrive(DcMotorController motorControllerFrontDrive) {
         this.motorControllerFrontDrive = motorControllerFrontDrive;
@@ -117,7 +122,7 @@ public class RSRobot {
     public void setMotorControllerRearDrive(DcMotorController motorControllerRearDrive) {
         this.motorControllerRearDrive = motorControllerRearDrive;
     }
-
+/*
     public long DriveForwardLegacy(double power, long distance) throws InterruptedException {
         double encoderTarget;
         double calculatedPow = 0;
@@ -200,6 +205,7 @@ public class RSRobot {
 
         return (distance);
     }
+    */
 
     private long Spin(double power, long degrees, double direction) throws InterruptedException {
         double calculatedPow = 0;
@@ -285,6 +291,138 @@ public class RSRobot {
         return Range.clip(calculatedPow, -1, 1);
     }
 
+    private long DriveStallDetection(double power, long distance, double direction) throws InterruptedException {
+        double encoderTarget;
+        double calculatedPow = 0;
+        double currentHeading = 0;
+        double leftCalculatedPow = 0;
+        double rightCalculatedPow = 0;
+        int leftStallPos = 0;
+        int rightStallPos = 0;
+        int leftMotorPos=0;
+        int rightMotorPos=0;
+        int leftStallCutoff;
+        int rightStallCutoff;
+        int leftStallCount = 0;
+        int rightStallCount = 0;
+        int leftMagicNumberofDeath = 4; //(2560 * 0.01)/4;  //encoder ticks per 10msec
+        int rightMagicNumberofDeath = 4; //(2560 * 0.01)/4;  //encoder ticks per 10msec
+        boolean isLeftMotorStalled = false;
+        boolean isRightMotorStalled = false;
+
+
+        //set current heading to zero
+        gyrothread.setCurrentHeading(0);
+        //use a while loop to keep motors going until desired heading reached
+
+        motorControllerFrontDrive.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
+
+        motorFrontRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        motorFrontLeft.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+        while(motorFrontRight.getCurrentPosition() != 0 || motorBackRight.getCurrentPosition() != 0)
+        {
+            opMode.waitForNextHardwareCycle();
+        }
+        motorFrontRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        motorFrontLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+
+        opMode.waitForNextHardwareCycle();
+
+        encoderTarget = distance / onemotorclick;
+
+        while (java.lang.Math.abs(motorFrontLeft.getCurrentPosition()) < encoderTarget &&
+                java.lang.Math.abs(motorFrontRight.getCurrentPosition()) < encoderTarget &&
+                !isLeftMotorStalled &&
+                !isRightMotorStalled) {
+
+            currentHeading = gyrothread.getCurrentHeading();
+            //calculatedPow = calculateDrivePow(distance, motorFrontLeft.getCurrentPosition()*onemotorclick, power)*direction;
+            leftCalculatedPow = Range.clip((power*direction) - (currentHeading/ 10), -1, 1);;
+            rightCalculatedPow = Range.clip((power*direction) + (currentHeading/ 10), -1, 1);;
+
+            motorBackLeft.setPower(leftCalculatedPow);
+            motorBackRight.setPower(rightCalculatedPow);
+            motorFrontLeft.setPower(leftCalculatedPow);
+            motorFrontRight.setPower(rightCalculatedPow);
+
+            opMode.telemetry.addData("Current Encoder Position ", motorFrontRight.getCurrentPosition());
+            opMode.telemetry.addData("Current Heading ", currentHeading);
+            opMode.telemetry.addData("left power ", leftCalculatedPow);
+            opMode.telemetry.addData("right power ", rightCalculatedPow);
+
+            leftMotorPos = motorFrontLeft.getCurrentPosition();
+            rightMotorPos = motorFrontRight.getCurrentPosition();
+            leftStallCutoff = leftMagicNumberofDeath;
+            rightStallCutoff = rightMagicNumberofDeath;
+
+//			nxtDisplayBigTextLine( 5, "L %d", leftMotorPos );
+            //		nxtDisplayTextLine( 7, "R %d", rightMotorPos );
+
+            //if trying to move and not successfully moving
+            if (( leftCalculatedPow != 0) && (Math.abs(leftMotorPos - leftStallPos) <= leftStallCutoff))
+            {
+                //if stalling for 50 rounds through the loop (.5 second)
+                if (++leftStallCount == 20)
+                {
+                    //left motor has stalled.
+                    isLeftMotorStalled = true;
+
+                }
+            }
+            else
+            {
+                // not stalled, reset stall counter
+                leftStallCount = 0;
+
+                isLeftMotorStalled = false;
+            }
+            //remembers encoder Pos for the next time through the loop
+            leftStallPos = leftMotorPos;
+
+            //if trying to move and not successfully moving
+            if (( rightCalculatedPow != 0) && (Math.abs(rightMotorPos - rightStallPos) <= rightStallCutoff))
+            {
+                //if stalling for 50 rounds through the loop
+                if (++rightStallCount == 20)
+                {
+                    //right motor has stalled.
+                    isRightMotorStalled = true;
+
+
+                }
+            }
+            else
+            {
+                // not stalled, reset stall counter
+                rightStallCount = 0;
+
+                isRightMotorStalled = false;
+            }
+            //remembers encoder Pos for the next time through the loop
+            rightStallPos = rightMotorPos;
+
+            opMode.waitForNextHardwareCycle();
+
+        }
+
+        motorBackLeft.setPower(0);
+        motorFrontLeft.setPower(0);
+        motorBackRight.setPower(0);
+        motorFrontRight.setPower(0);
+        opMode.waitForNextHardwareCycle();
+
+        if(isLeftMotorStalled || isRightMotorStalled)
+        {
+            if(leftMotorPos >rightMotorPos)
+
+                distance = (long)(leftMotorPos*onemotorclick);
+            else
+                distance = (long)(rightMotorPos*onemotorclick);
+        }
+
+        return (distance);
+    }
+
     private long Drive(double power, long distance, double direction) throws InterruptedException {
         double encoderTarget;
         double calculatedPow = 0;
@@ -299,13 +437,13 @@ public class RSRobot {
         motorControllerFrontDrive.setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
 
         motorFrontRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-       // motorFrontRight.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+       // motorFrontLeftt.setMode(DcMotorController.RunMode.RESET_ENCODERS);
         while(motorFrontRight.getCurrentPosition() != 0 /*|| motorBackRight.getCurrentPosition() != 0*/)
         {
             opMode.waitForNextHardwareCycle();
         }
         motorFrontRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        //motorBackRight.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        //motorFrontLeft.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
 
         opMode.waitForNextHardwareCycle();
 
@@ -348,7 +486,14 @@ public class RSRobot {
         //Calling drive function and -1 is backward
         return(Drive(power, distance, -1));
     }
-
+    public long DriveForwardStallDetection(double power, long distance) throws InterruptedException {
+        //Calling drive function and 1 is forward
+        return(DriveStallDetection(power, distance, 1));
+    }
+    public long DriveBackwardStallDetection(double power, long distance) throws InterruptedException {
+        //Calling drive function and -1 is backward
+        return(DriveStallDetection(power, distance, -1));
+    }
     public void auto_1_OMC(Alliance alliance, long delay) throws InterruptedException
     {
         //allows us to use the code on red and blue
@@ -410,8 +555,6 @@ public class RSRobot {
         //wait for the specified delay
         opMode.sleep(delay * 1000);
 
-
-        //robot.SpinRight(1, 360);
         DriveForward(1.0, 85);
 
         opMode.sleep(1000);
@@ -431,6 +574,89 @@ public class RSRobot {
         DriveForward(1, 300);
     }
 
+    public void auto_1_PZ(Alliance alliance, long delay) throws InterruptedException
+    {
+        long distanceDriven = 0;
+        setMyAlliance(alliance);
+
+        opMode.sleep(delay * 1000);
+
+        DriveBackward(.5,30);
+        opMode.sleep(1000);
+
+        DriveForward(.5,25);
+
+        //start moving
+        dropHarvester();
+
+        opMode.sleep(3000);
+
+        recalibrateHarvester();
+
+        reverseSpinner();
+
+        distanceDriven = DriveBackwardStallDetection(.5, 165);
+       // DriveBackward(.5, 170);
+        if(distanceDriven < 165)
+        {
+            stopSpinner();
+            raiseHarvester();
+            DriveForward(.5, 30);
+            dropHarvester();
+            opMode.sleep(3000);
+            reverseSpinner();
+            DriveBackward(.5, 165-distanceDriven + 30);
+        }
+
+
+        stopSpinner();
+
+        raiseHarvester();
+
+        opMode.sleep(3000);
+
+        DriveBackward(.5, 10);
+    }
+
+    public void auto_3_PZ(Alliance alliance, long delay) throws InterruptedException
+    {
+        long distanceDriven = 0;
+        setMyAlliance(alliance);
+
+        opMode.sleep(delay * 1000);
+
+        //start moving
+        dropHarvester();
+
+        opMode.sleep(3000);
+
+        recalibrateHarvester();
+
+        reverseSpinner();
+
+       // distanceDriven = DriveBackwardStallDetection(.5, 330);
+         DriveBackward(.5, 210);
+        //if(distanceDriven < 330)
+        //{
+        //    stopSpinner();
+        //    raiseHarvester();
+        //    DriveForward(.5, 30);
+        //    dropHarvester();
+        //    opMode.sleep(3000);
+        //    reverseSpinner();
+        //    DriveBackward(.5, 330-distanceDriven + 30);
+        //}
+
+
+        stopSpinner();
+
+        raiseHarvester();
+
+        opMode.sleep(3000);
+
+        DriveBackward(.5, 75);
+    }
+
     public void auto_3_OMC(Alliance alliance, long delay) throws InterruptedException
     {
         //allows us to use the code on red and blue
@@ -439,26 +665,94 @@ public class RSRobot {
         //wait for the specified delay
         opMode.sleep(delay * 1000);
 
+        dropHarvester();
+
+        opMode.sleep(3000);
+
+        recalibrateHarvester();
+
+        reverseSpinner();
+
 
         //robot.SpinRight(1, 360);
-        DriveForward(1.0, 20);
+        DriveBackward(1, 45);
 
         opMode.sleep(1500);
 
-        SpinRight(1, 45);
+        SpinRight(1, 90);
 
         opMode.sleep(1000);
 
-        DriveForward(1.0, 115);
+        DriveBackward(1, 120);
 
         opMode.sleep(1000);
 
-        SpinRight(1, 87);
+        stopSpinner();
 
-        opMode.sleep(1000);
+        raiseHarvester();
 
-        DriveForward(1, 300);
+        opMode.sleep(3000);
+
+        SpinLeft(1, 135);
+
+        opMode.sleep (1000);
+
+        DriveForward(1, 150);
+
+
     }
+
+    public void initializeHarvester () throws InterruptedException
+    {
+        bucketThread = new BucketThread(motorHarvester);
+
+        bucketThread.InitializeBucket();
+
+    }
+
+    public void dropHarvester () throws InterruptedException
+    {
+        bucketThread.targetPos = -1450;
+    }
+
+    public void raiseHarvester () throws InterruptedException
+    {
+        bucketThread.targetPos = -50;
+    }
+
+    public void recalibrateHarvester () throws InterruptedException
+    {
+        //resets the target position to where the bucket is currently (used at ground)
+        bucketThread.targetPos = motorHarvester.getCurrentPosition();
+    }
+
+    public void reverseSpinner () throws InterruptedException
+    {
+        motorSpinner.setPower(-1);
+    }
+
+    public void intakeSpinner () throws InterruptedException
+    {
+        motorSpinner.setPower (1);
+    }
+
+    public void stopSpinner () throws InterruptedException
+    {
+        motorSpinner.setPower(0);
+    }
+
+    public void startHarvester () throws  InterruptedException
+    {
+
+        motorHarvester.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        bucketThread.start();
+    }
+
+    public void stopHarvester () throws  InterruptedException
+    {
+        bucketThread.stopBucketThread();
+    }
+
 
     public void pre_Match_Test() throws InterruptedException
     {

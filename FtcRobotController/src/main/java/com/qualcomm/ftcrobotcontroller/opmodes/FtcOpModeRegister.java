@@ -63,29 +63,37 @@ public class FtcOpModeRegister implements OpModeRegister {
 
     //Tele-op Program
     manager.register("RSTeleOp", RSTeleOp.class);
-    manager.register("ServoTest", ServoTest.class);
+   // manager.register("ServoTest", ServoTest.class);
     manager.register("LinearCameraOp", LinearCameraOp.class);
     //Autonomous Programs
       //Blue Alliance Programs No Delays
-      manager.register("B_1_OMR_0", B_1_OMR_0.class);
-      manager.register("B_1_OMB_0", B_1_OMB_0.class);
-      manager.register("B_3_OMR_0", B_3_OMR_0.class);
-      manager.register("B_3_OMB_0", B_3_OMB_0.class);
+      manager.register("B_1_PZ_0", B_1_PZ_0.class);
+      manager.register("B_3_PZ_0", B_3_PZ_0.class);
+      manager.register("B_1_PZ_10", B_1_PZ_10.class);
+      manager.register("B_3_PZ_10", B_3_PZ_10.class);
+      manager.register("R_1_PZ_0", R_1_PZ_0.class);
+      manager.register("R_3_PZ_0", R_3_PZ_0.class);
+      manager.register("R_1_PZ_10", R_1_PZ_10.class);
+      manager.register("R_3_PZ_10", R_3_PZ_10.class);
+//      manager.register("B_1_OMR_0", B_1_OMR_0.class);
+//      manager.register("B_1_OMB_0", B_1_OMB_0.class);
+      //manager.register("B_3_OMR_0", B_3_OMR_0.class);
+//      manager.register("B_3_OMB_0", B_3_OMB_0.class);
       //Red Alliance Programs No Delays
-      manager.register("R_1_OMB_0", R_1_OMB_0.class);
-      manager.register("R_1_OMR_0", R_1_OMR_0.class);
-      manager.register("R_3_OMB_0", R_3_OMB_0.class);
-      manager.register("R_3_OMR_0", R_3_OMR_0.class);
+//      manager.register("R_1_OMB_0", R_1_OMB_0.class);
+//      manager.register("R_1_OMR_0", R_1_OMR_0.class);
+//      manager.register("R_3_OMB_0", R_3_OMB_0.class);
+//      manager.register("R_3_OMR_0", R_3_OMR_0.class);
       //Blue Alliance Programs with 10 second delays
-      manager.register("B_1_OMR_10", B_1_OMR_10.class);
-      manager.register("B_1_OMB_10", B_1_OMB_10.class);
-      manager.register("B_3_OMR_10", B_3_OMR_10.class);
-      manager.register("B_3_OMB_10", B_3_OMB_10.class);
+//      manager.register("B_1_OMR_10", B_1_OMR_10.class);
+//      manager.register("B_1_OMB_10", B_1_OMB_10.class);
+//      manager.register("B_3_OMR_10", B_3_OMR_10.class);
+//      manager.register("B_3_OMB_10", B_3_OMB_10.class);
       //Red Alliance Programs with 10 second delays
-      manager.register("R_1_OMB_10", R_1_OMB_10.class);
-      manager.register("R_1_OMR_10", R_1_OMR_10.class);
-      manager.register("R_3_OMB_10", R_3_OMB_10.class);
-      manager.register("R_3_OMR_10", R_3_OMR_10.class);
+//      manager.register("R_1_OMB_10", R_1_OMB_10.class);
+//      manager.register("R_1_OMR_10", R_1_OMR_10.class);
+//      manager.register("R_3_OMB_10", R_3_OMB_10.class);
+//      manager.register("R_3_OMR_10", R_3_OMR_10.class);
 
     /*
      * Uncomment any of the following lines if you want to register an op mode.

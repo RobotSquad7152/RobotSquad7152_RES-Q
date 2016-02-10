@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -41,63 +43,76 @@ import RobotSquad.BucketThread;
 
 /**
  * TeleOp Mode
- * <p>
+ * <p/>
  * Enables control of the robot via the gamepad
  */
-public class RSTeleOp extends OpMode {
+public class RSTeleOp extends OpMode
+{
 
 	/*
-	 * Note: the configuration of the servos is such that
+     * Note: the configuration of the servos is such that
 	 * as the arm servo approaches 0, the arm position moves up (away from the floor).
 	 * Also, as the claw servo approaches 0, the claw opens up (drops the game element).
 	 */
-	// TETRIX VALUES.
+    // TETRIX VALUES.
 
-	DcMotor motorFrontRight;
-	DcMotor motorFrontLeft;
-	DcMotor motorBackRight;
-	DcMotor motorBackLeft;
-	DcMotor motorArm;
-	DcMotor motorSlide;
-	DcMotor motorBucket;
-	DcMotor motorSpinner;
-	Servo servoDoor;
-	Servo servoHopper;
-	Servo servoChurro;
+    DcMotor motorFrontRight;
+    DcMotor motorFrontLeft;
+    DcMotor motorBackRight;
+    DcMotor motorBackLeft;
+    DcMotor motorArm;
+    DcMotor motorSlide;
+    DcMotor motorBucket;
+    DcMotor motorSpinner;
+    Servo servoDoor;
+    Servo servoHopper;
+    Servo servoChurro;
+    Servo servoClimber;
 
-	BucketThread bucketThread;
-	double leftPower = 0;
-	double rightPower = 0;
-	double armPower = 0;
-	double deadZone = .1;
-	double servoDoorOpen = .8;
-	double servoDoorClose = 0;
-	double servoHopperPos = 0.5;//stopped continuous
-	int bucketTarget;
-	int bucketPos = 0;
-	boolean continuousSpin = false;
-	boolean j1aPressed = false;
-	boolean j1bPressed = false;
-	double servoChurroUp = .5;
-	double servoChurroDown = .3;
 
-	double servoPos = 0.5;
-	/**
-	 * Constructor
-	 */
-	public RSTeleOp() {
+    BucketThread bucketThread;
+    double leftPower = 0;
+    double rightPower = 0;
+    double armPower = 0;
+    double deadZone = .1;
+    double servoDoorOpen = 1.0;
+    double servoDoorClose = 0;
+    double servoHopperPos = 0.5;//stopped continuous
+    int bucketTarget;
+    int bucketPos = 0;
+    double maxSpinnerCollectPow = 1.0;
+    double maxSpinnerDispensePow = 0.75;
+    boolean continuousSpin = false;
+    boolean j1aPressed = false;
+    boolean j1bPressed = false;
+    double servoChurroUp = 0.15;
+    double servoChurroDown = 0.75;
+    boolean drivingForward = true;
+    boolean harvesterMoving = false;
+    double servoClimberClose = 0;
+    double servoClimberOpen = 1;
+    double servoClimberPos = 0;
 
-	}
+    //double servoPos = 0.5;
 
-	/*
-	 * Code to run when the op mode is first enabled goes here
-	 * 
-	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#start()
-	 */
-	@Override
-	public void init() {
-		/*Controller		Config Name		Robot
-		Front Drive Port 1	motor_1			Front Right
+    /**
+     * Constructor
+     */
+    public RSTeleOp()
+    {
+
+    }
+
+    /*
+     * Code to run when the op mode is first enabled goes here
+     *
+     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#start()
+     */
+    @Override
+    public void init()
+    {
+        /*Controller		Config Name		Robot
+        Front Drive Port 1	motor_1			Front Right
 		Front Drive Port 2	motor_2			Front Left
 		Rear Drive Port 1	motor_3			Back Right
 		Rear Drive Port 2	motor_4			Back Left
@@ -105,289 +120,342 @@ public class RSTeleOp extends OpMode {
 		Harvester port 1	motor_8			Harvester bucket
 		Harvester port 2	motor_7			Harvester spinner*/
 
-		motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
-		motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
-		motorFrontRight = hardwareMap.dcMotor.get("motor_1");
-		motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
-		motorBackLeft = hardwareMap.dcMotor.get("motor_4");
-		motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
-		motorBackRight = hardwareMap.dcMotor.get("motor_3");
-		motorBackRight.setDirection(DcMotor.Direction.REVERSE);
+        motorFrontLeft = hardwareMap.dcMotor.get("motor_2");
+        motorFrontLeft.setDirection(DcMotor.Direction.FORWARD);
+        motorFrontRight = hardwareMap.dcMotor.get("motor_1");
+        motorFrontRight.setDirection(DcMotor.Direction.REVERSE);
+        motorBackLeft = hardwareMap.dcMotor.get("motor_4");
+        motorBackLeft.setDirection(DcMotor.Direction.FORWARD);
+        motorBackRight = hardwareMap.dcMotor.get("motor_3");
+        motorBackRight.setDirection(DcMotor.Direction.REVERSE);
 
-		motorSlide = hardwareMap.dcMotor.get("motor_5");
-		motorSlide.setDirection(DcMotor.Direction.FORWARD);
+        motorSlide = hardwareMap.dcMotor.get("motor_5");
+        motorSlide.setDirection(DcMotor.Direction.FORWARD);
 
-		motorBucket = hardwareMap.dcMotor.get("motor_8");
-		motorBucket.setDirection(DcMotor.Direction.FORWARD);
+        motorBucket = hardwareMap.dcMotor.get("motor_8");
+        motorBucket.setDirection(DcMotor.Direction.FORWARD);
 
-		motorSpinner = hardwareMap.dcMotor.get("motor_7");
-		motorSpinner.setDirection(DcMotor.Direction.FORWARD);
+        motorSpinner = hardwareMap.dcMotor.get("motor_7");
+        motorSpinner.setDirection(DcMotor.Direction.FORWARD);
 
-		servoDoor = hardwareMap.servo.get("servo_door");
-		servoDoor.setPosition(servoDoorClose);
+        servoDoor = hardwareMap.servo.get("servo_door");
+        servoDoor.setPosition(servoDoorClose);
 
-		servoHopper = hardwareMap.servo.get("servo_hopper");
-		servoHopper.setPosition(servoHopperPos);
+        servoHopper = hardwareMap.servo.get("servo_hopper");
+        servoHopper.setPosition(servoHopperPos);
 
-		servoChurro = hardwareMap.servo.get("servo_churro");
-		servoChurro.setPosition(servoChurroUp);
+        servoChurro = hardwareMap.servo.get("servo_churro");
+        servoChurro.setPosition(servoChurroUp);
 
-		bucketThread = new BucketThread(motorBucket);
+        servoClimber = hardwareMap.servo.get("servo_climber");
+        servoClimber.setPosition(servoClimberClose);
 
-		bucketThread.InitalizeBucket();
+        bucketThread = new BucketThread(motorBucket);
 
-		bucketTarget = motorBucket.getCurrentPosition();
+        bucketThread.InitializeBucket();
 
-
-
-
-	//	motorBucket.getController().setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
-
-	//	motorBucket.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-
-	}
-
-	@Override
-	public void start() {
-		motorBucket.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-
-		bucketThread.start();
-
-	}
+        bucketTarget = motorBucket.getCurrentPosition();
 
 
-	/*
-	 * This method will be called repeatedly in a loop
-	 * 
-	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#run()
-	 */
-	@Override
-	public void loop() {
+        //	motorHarvester.getController().setMotorControllerDeviceMode(DcMotorController.DeviceMode.READ_WRITE);
+
+        //	motorHarvester.setMode(DcMotorController.RunMode.RESET_ENCODERS);
+
+    }
+
+    @Override
+    public void start()
+    {
+        motorBucket.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+
+        bucketThread.start();
+
+    }
 
 
-
-		double j1y1 = -gamepad1.left_stick_y;
-		double j1x2 = gamepad1.right_stick_x;
-
-		double j2y1 = gamepad2.left_stick_y;
-
-
-
-
-	//	telemetry.addData("y1 ", j1y1);
-	//	telemetry.addData("x2 ", j1x2);
-		telemetry.addData("servo", servoDoor.getPosition());
-		telemetry.addData("servo", servoChurro.getPosition());
-
-		if (j1y1 >= deadZone)
-		{
-			if (j1x2 >= deadZone)
-			{
-				leftPower = j1y1;
-				rightPower = j1y1 - (j1y1 * j1x2);
-			} else if (j1x2 < -deadZone)
-			{
-				leftPower = j1y1 - (j1y1 * -j1x2);
-				rightPower = j1y1;
-			} else
-			{
-				leftPower = j1y1;
-				rightPower = j1y1;
-			}
-
-		} else if (j1y1 <= -deadZone)
-		{
-			if (j1x2 >= deadZone)
-			{
-				leftPower = j1y1;
-				rightPower = j1y1 + (j1y1 * -j1x2);
-			} else if (j1x2 < -deadZone)
-			{
-				leftPower = j1y1 + (j1y1 * j1x2);
-				rightPower = j1y1;
-			} else
-			{
-				leftPower = j1y1;
-				rightPower = j1y1;
-			}
-		} else //y1 is equal to 0 for spins
-		{
-			if ((j1x2 < -deadZone) || (j1x2 > deadZone))
-			{
-				leftPower = j1x2;
-				rightPower = -j1x2;
-			} else
-			{
-				leftPower = 0;
-
-				rightPower = 0;
-			}
-		}
-
-		telemetry.addData("left power", "LeftPow " + leftPower);
-		telemetry.addData("right power", "RightPow " + rightPower);
-
-		motorFrontRight.setPower(Range.clip(rightPower, -1, 1));
-		motorBackRight.setPower(Range.clip(rightPower, -1, 1));
-		motorFrontLeft.setPower(Range.clip(leftPower, -1, 1));
-		motorBackLeft.setPower(Range.clip(leftPower, -1, 1));
+    /*
+     * This method will be called repeatedly in a loop
+     *
+     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#run()
+     */
+    @Override
+    public void loop()
+    {
 
 
-		if (gamepad2.dpad_up)
-		{
-			motorSlide.setPower(1);
-		}
-		else if(gamepad2.dpad_down)
-		{
-			motorSlide.setPower(-1);
-		}
-		else
-		{
-			motorSlide.setPower(0);
+        double j1y1 = -gamepad1.left_stick_y;
+        double j1x2 = gamepad1.right_stick_x;
 
-		}
-
-		if (gamepad2.dpad_left)
-		{
-			//hopper left
-			servoHopperPos = 0;
-		}
-		else if (gamepad2.dpad_right)
-		{
-			//hopper  right
-			servoHopperPos = 1;
-		}
-		else
-		{
-			//hopper stopped
-			servoHopperPos = 0.5;
-		}
-
-		servoHopper.setPosition(servoHopperPos);
-
-		if (gamepad2.x)
-		{
-			servoDoor.setPosition(Range.clip(servoDoorOpen, 0, 1));
+        double j2y1 = gamepad2.left_stick_y;
 
 
-		}
-		if (gamepad2.y)
-		{
-			servoDoor.setPosition(Range.clip(servoDoorClose, 0, 1));
-		}
+        //	telemetry.addData("y1 ", j1y1);
+        //	telemetry.addData("x2 ", j1x2);
+        telemetry.addData("servo", servoDoor.getPosition());
+        telemetry.addData("servo", servoChurro.getPosition());
 
-		if (gamepad1.x)
-		{
+        if (j1y1 >= deadZone)
+        {
+            if (j1x2 >= deadZone)
+            {
+                leftPower = j1y1;
+                rightPower = j1y1 - (j1y1 * j1x2);
+            }
+            else if (j1x2 < -deadZone)
+            {
+                leftPower = j1y1 - (j1y1 * -j1x2);
+                rightPower = j1y1;
+            }
+            else
+            {
+                leftPower = j1y1;
+                rightPower = j1y1;
+            }
 
-			servoPos -= 0.01;
-			servoChurro.setPosition(Range.clip(servoPos, 0, 1));
-		//	servoChurro.setPosition(Range.clip(servoChurroUp, 0, 1));
+        }
+        else if (j1y1 <= -deadZone)
+        {
+            if (j1x2 >= deadZone)
+            {
+                leftPower = j1y1;
+                rightPower = j1y1 + (j1y1 * -j1x2);
+            }
+            else if (j1x2 < -deadZone)
+            {
+                leftPower = j1y1 + (j1y1 * j1x2);
+                rightPower = j1y1;
+            }
+            else
+            {
+                leftPower = j1y1;
+                rightPower = j1y1;
+            }
+        }
+        else //y1 is equal to 0 for spins
+        {
+            if ((j1x2 < -deadZone) || (j1x2 > deadZone))
+            {
+                leftPower = j1x2;
+                rightPower = -j1x2;
+            }
+            else
+            {
+                leftPower = 0;
+
+                rightPower = 0;
+            }
+        }
+
+        telemetry.addData("left power", "LeftPow " + leftPower);
+        telemetry.addData("right power", "RightPow " + rightPower);
+
+        if (gamepad1.dpad_up)
+        {
+            drivingForward = true;
+        }
+        else if (gamepad1.dpad_down)
+        {
+            drivingForward = false;
+        }
+        if (!drivingForward && ((rightPower >= 0 && leftPower >= 0) || (rightPower <= 0 && leftPower <= 0)))
+        {
+            //A button reverses the direction the robot drives for easier scoring
+
+            double tempRightPower = rightPower;
+            rightPower = -leftPower;
+            leftPower = -tempRightPower;
+        }
+        motorFrontRight.setPower(Range.clip(rightPower, -1, 1));
+        motorBackRight.setPower(Range.clip(rightPower, -1, 1));
+        motorFrontLeft.setPower(Range.clip(leftPower, -1, 1));
+        motorBackLeft.setPower(Range.clip(leftPower, -1, 1));
 
 
-		}
-		if (gamepad1.y)
-		{
-			servoPos += 0.01;
-			servoChurro.setPosition(Range.clip(servoPos, 0, 1));
-		//	servoChurro.setPosition(Range.clip(servoChurroDown, 0, 1));
-		}
+        if (gamepad1.dpad_left)
+        {
+            //servoClimberPos = (servoClimberPos + .05);
+            //servoClimberPos = servoClimberOpen;
+            servoClimber.setPosition(Range.clip(servoClimberOpen, 0, 1));
 
-		telemetry.addData("Churro pos " , "ChurroPos;" + servoPos);
-
-		if ((j2y1 < -deadZone) || (j2y1 > deadZone))
-		{
-			if (j2y1 < 0)
-			{
-				//harvester up
-			bucketTarget -= 10;
-				//motorBucket.setPower(-0.3);
-			}
-			else if (j2y1 > 0)
-			{
-				//harvester down
-				bucketTarget += 10;
-				//motorBucket.setPower(0.3);
-			}
-
-		}
-		else
-		{
-			//motorBucket.setPower(0);
-			bucketTarget = motorBucket.getCurrentPosition();//stop moving after dpad is released
-		}
-
-		bucketThread.targetPos = bucketTarget;
-
-		//bucketThread.targetPos = bucketTarget;
-		bucketPos = motorBucket.getCurrentPosition();
-
-
-	//	telemetry.addData("bucket target " , "bucketTarget;" + bucketTarget);
-		telemetry.addData("bucket position " , "bucketpos;" + bucketPos);
-
-		if (gamepad1.a)
-		{
-			if (!j1aPressed)
-			{
-				j1aPressed = true;
-				//motorSpinner
-				if (continuousSpin)
-				{
-					continuousSpin = false;
-					motorSpinner.setPower(0);
-				}
-				else
-				{
-					continuousSpin = true;
-					motorSpinner.setPower(1);
-				}
-			}
-		}
-		else
-		{
-			j1aPressed = false;
-		}
-
-		if (gamepad1.b)
-		{
-			if (!j1bPressed)
-			{
-				j1bPressed = true;
-				//motorSpinner
-				if (continuousSpin)
-				{
-					continuousSpin = false;
-					motorSpinner.setPower(0);
-				}
-				else
-				{
-					continuousSpin = true;
-					motorSpinner.setPower(-1);
-				}
-			}
-		}
-		else
-		{
-			j1bPressed = false;
-		}
-		if (gamepad1.left_trigger > 0.1) {
-			//motor spinner
-			continuousSpin =false;
-			motorSpinner.setPower(-gamepad1.left_trigger);
-		}else if (gamepad1.right_trigger > 0.1) {
-			//motor spinner
-			continuousSpin = false;
-			motorSpinner.setPower(gamepad1.right_trigger);
-		}
-		else
-		{
-			if (!continuousSpin)
-				motorSpinner.setPower(0);
-		}
+        }
+        else if (gamepad1.dpad_right)
+        {
+            //servoClimberPos = servoClimberClose;
+            //servoClimberPos = (servoClimberPos - .05);
+            servoClimber.setPosition(Range.clip(servoClimberClose, 0, 1));
+        }
 
 
 
 
+        if (gamepad2.dpad_up)
+        {
+            motorSlide.setPower(1);
+        }
+        else if (gamepad2.dpad_down)
+        {
+            motorSlide.setPower(-1);
+        }
+        else
+        {
+            motorSlide.setPower(0);
+
+        }
+
+        if (gamepad2.dpad_left)
+        {
+            //hopper left
+            servoHopperPos = 0;
+        }
+        else if (gamepad2.dpad_right)
+        {
+            //hopper  right
+            servoHopperPos = 1;
+        }
+        else
+        {
+            //hopper stopped
+            servoHopperPos = 0.5;
+        }
+
+        servoHopper.setPosition(servoHopperPos);
+
+        if (gamepad2.x)
+        {
+            servoDoor.setPosition(Range.clip(servoDoorOpen, 0, 1));
+
+
+        }
+        if (gamepad2.y)
+        {
+            servoDoor.setPosition(Range.clip(servoDoorClose, 0, 1));
+        }
+
+        if (gamepad1.x)
+        {
+
+            //servoPos -= 0.01;
+            //servoChurro.setPosition(Range.clip(servoPos, 0, 1));
+            servoChurro.setPosition(Range.clip(servoChurroDown, 0, 1));
+
+
+        }
+        if (gamepad1.y)
+        {
+            //servoPos += 0.01;
+            //servoChurro.setPosition(Range.clip(servoPos, 0, 1));
+            servoChurro.setPosition(Range.clip(servoChurroUp, 0, 1));
+        }
+
+        telemetry.addData("Climber pos " , "ClimberPos;" + servoClimberPos);
+
+        if ((j2y1 < -deadZone) || (j2y1 > deadZone))
+        {
+            harvesterMoving = true;
+            if (j2y1 < 0)
+            {
+                //harvester up
+                bucketTarget -= 10;
+            }
+            else if (j2y1 > 0)
+            {
+                //harvester down
+                bucketTarget += 10;
+            }
+
+        }
+        else if (harvesterMoving)
+        {
+            //once the joystick is released hold the current position
+            bucketTarget = motorBucket.getCurrentPosition();//stop moving after dpad is released
+            harvesterMoving = false;
+        }
+
+        bucketThread.targetPos = bucketTarget;
+
+        //bucketThread.targetPos = bucketTarget;
+        bucketPos = motorBucket.getCurrentPosition();
+
+
+        telemetry.addData("bucket target ", "bucketTarget;" + bucketTarget);
+        telemetry.addData("bucket position ", "bucketpos;" + bucketPos);
+
+        if (gamepad1.a)
+        {
+            if (!j1aPressed)
+            {
+                j1aPressed = true;
+                //motorSpinner
+                if (continuousSpin)
+                {
+                    continuousSpin = false;
+                    motorSpinner.setPower(0);
+                }
+                else
+                {
+                    continuousSpin = true;
+                    motorSpinner.setPower(maxSpinnerCollectPow);
+                }
+            }
+        }
+
+
+        else
+        {
+            j1aPressed = false;
+        }
+
+        if (gamepad1.b)
+        {
+            if (!j1bPressed)
+            {
+                j1bPressed = true;
+                //motorSpinner
+                if (continuousSpin)
+                {
+                    continuousSpin = false;
+                    motorSpinner.setPower(0);
+                }
+                else
+                {
+                    continuousSpin = true;
+                    motorSpinner.setPower(-maxSpinnerCollectPow);
+                }
+            }
+        }
+        else
+        {
+            j1bPressed = false;
+        }
+        if (gamepad1.left_trigger > 0.1)
+        {
+            //motor spinner
+            continuousSpin = false;
+            motorSpinner.setPower(-gamepad1.left_trigger * maxSpinnerDispensePow);
+        }
+        else if (gamepad1.right_trigger > 0.1)
+        {
+            //motor spinner
+            continuousSpin = false;
+            motorSpinner.setPower(gamepad1.right_trigger * maxSpinnerCollectPow);
+        }
+        else if (gamepad2.left_trigger > 0.1)
+        {
+            //motor spinner
+            continuousSpin = false;
+            motorSpinner.setPower(-gamepad2.left_trigger * maxSpinnerDispensePow);
+        }
+        else if (gamepad2.right_trigger > 0.1)
+        {
+            //motor spinner
+            continuousSpin = false;
+            motorSpinner.setPower(gamepad2.right_trigger * maxSpinnerCollectPow);
+        }
+        else
+        {
+            if (!continuousSpin)
+                motorSpinner.setPower(0);
+        }
 
 
 //		if( gamepad1.dpad_down )
@@ -409,52 +477,60 @@ public class RSTeleOp extends OpMode {
 //			motorFrontRight.setPower(1);
 //		else
 //			motorFrontRight.setPower(0);
-	}
+    }
 
 
-	/*
-	 * Code to run when the op mode is first disabled goes here
-	 * 
-	 * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#stop()
-	 */
-	@Override
-	public void stop() {
-		//bucketThread.stop();
-	}
+    /*
+     * Code to run when the op mode is first disabled goes here
+     *
+     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#stop()
+     */
+    @Override
+    public void stop()
+    {
+        bucketThread.stopBucketThread();
+        Log.d("DEBUG", "RSTeleOp.Stop");
+    }
 
-    	
-	/*
-	 * This method scales the joystick input so for low joystick values, the 
-	 * scaled value is less than linear.  This is to make it easier to drive
-	 * the robot more precisely at slower speeds.
-	 */
-	double scaleInput(double dVal)  {
-		double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
-				0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
-		
-		// get the corresponding index for the scaleInput array.
-		int index = (int) (dVal * 16.0);
-		
-		// index should be positive.
-		if (index < 0) {
-			index = -index;
-		}
 
-		// index cannot exceed size of array minus 1.
-		if (index > 16) {
-			index = 16;
-		}
+    /*
+     * This method scales the joystick input so for low joystick values, the
+     * scaled value is less than linear.  This is to make it easier to drive
+     * the robot more precisely at slower speeds.
+     */
+    double scaleInput(double dVal)
+    {
+        double[] scaleArray = {0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
+                0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00};
 
-		// get value from the array.
-		double dScale = 0.0;
-		if (dVal < 0) {
-			dScale = -scaleArray[index];
-		} else {
-			dScale = scaleArray[index];
-		}
+        // get the corresponding index for the scaleInput array.
+        int index = (int) (dVal * 16.0);
 
-		// return scaled value.
-		return dScale;
-	}
+        // index should be positive.
+        if (index < 0)
+        {
+            index = -index;
+        }
+
+        // index cannot exceed size of array minus 1.
+        if (index > 16)
+        {
+            index = 16;
+        }
+
+        // get value from the array.
+        double dScale = 0.0;
+        if (dVal < 0)
+        {
+            dScale = -scaleArray[index];
+        }
+        else
+        {
+            dScale = scaleArray[index];
+        }
+
+        // return scaled value.
+        return dScale;
+    }
 
 }
